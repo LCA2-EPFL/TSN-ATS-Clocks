@@ -15,8 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
+ * Author: Guillermo Aguirre 
  */
+// TODO Logging 
+
 
 #include "localtime-simulator-impl.h"
 #include "simulator.h"
@@ -25,6 +27,9 @@
 #include "pointer.h"
 #include "assert.h"
 #include <cmath>
+#include <ns3/node-list.h>
+#include <ns3/node.h>
+
 
 
 
@@ -59,17 +64,19 @@ LocalTimeSimulatorImpl::LocalTimeSimulatorImpl()
 
 LocalTimeSimulatorImpl::~LocalTimeSimulatorImpl ()
 {
-  NS_LOG_FUNCTION (this)
+  NS_LOG_FUNCTION (this);
 }
 
 EventId
 LocalTimeSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
 {
+  Ptr<Node>  n = NodeList::GetNode(m_currentContext);
+  
   return 0;
 }
 void
 LocalTimeSimulatorImpl::ScheduleWithContext (uint32_t context, Time const &delay, EventImpl *event)
 {
-  Ptr<Node>  n = NodeList::GetNode(m_currentContext);
+ 
 }
 }// namespace ns

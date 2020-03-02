@@ -35,8 +35,11 @@ namespace ns3{
 /**
  *  \ingroup simulator
  * 
- * Implementation of single process simulator based on node local time. 
- */   
+ * @brief Implementation of single process simulator based on node local time. 
+ * This class translate the local delay (node time) to global delay (simulation time)
+ * when function Schedule and SchedulewithContext are called.
+ */
+
 class LocalTimeSimulatorImpl : public DefaultSimulatorImpl
 {
 public:
@@ -51,8 +54,17 @@ public:
   /** Destructor. */
   ~LocalTimeSimulatorImpl();
 
-  //inherited
+  /**
+   * This function provides a mechanism to translate the delay which is based on the node local time. 
+   * The node implementation is obtained through the node list and the current context.
+   * DefaultSimulatorImpl::Schedule(const Time &delay, EventImpl *event) is called to simulate 
+   * the events in the main simulator.
+   */
   virtual EventId Schedule (const Time &delay, EventImpl *event);
+
+  /**
+   * TODO decide how to treat packets where the context is the next receving node and context chage.
+   */
   virtual void ScheduleWithContext (uint32_t context, const Time &delay, EventImpl *event);
   
 private:
