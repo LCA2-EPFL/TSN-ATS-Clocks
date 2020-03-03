@@ -21,14 +21,12 @@
 
 
 #include "localtime-simulator-impl.h"
-#include "simulator.h"
-#include "log.h"
-#include "ptr.h"
-#include "pointer.h"
-#include "assert.h"
-#include <cmath>
-#include <ns3/node-list.h>
-#include <ns3/node.h>
+#include "ns3/simulator.h"
+#include "ns3/log.h"
+#include "ns3/ptr.h"
+#include "ns3/assert.h"
+#include "ns3/node-list.h"
+#include "ns3/node.h"
 
 
 
@@ -71,12 +69,13 @@ EventId
 LocalTimeSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
 {
   Ptr<Node>  n = NodeList::GetNode(m_currentContext);
-  
-  return 0;
+  //TODO
+  EventId id;
+  return id;
 }
 void
 LocalTimeSimulatorImpl::ScheduleWithContext (uint32_t context, Time const &delay, EventImpl *event)
 {
- 
+  //TODO
 }
 }// namespace ns

@@ -20,14 +20,14 @@
 #ifndef LOCAL_CLOCK_H
 #define LOCAL_CLOCK_H
 
-#include <object.h>
-#include <clock-model-impl.h>
-#include <scheduler.h>
-#include <event-id.h>
-#include <ptr.h>
+#include "ns3/object.h"
+#include "clock-model-impl.h"
+#include "ns3/scheduler.h"
+#include "ns3/event-id.h"
+#include "ns3/ptr.h"
+#include "ns3/nstime.h"
 
 namespace ns3 {
-class Time;
 /**
  * \file
  * \ingroup Clock
@@ -54,7 +54,6 @@ public:
    */
   static TypeId GetTypeId (void);
   
-  LocalClock (ClockModelImpl *clock);
   /**
    * \param ClockModelImpl a implementation of a ClockModel Class.
    */
@@ -78,21 +77,21 @@ public:
   /**
    * \brief Transform Time from Global (simulator time) to Local(Local Node Time).
    */
-  void GlobalToLocalTime (Time &globalTime, Time &localTime);
+  Time GlobalToLocalTime (Time globalTime);
   
   /**
    * \brief Transform Time from Local (Local Node Time) to Global (simulator time).
    */
-  void LocalToGlobalTime (Time &localTime, Time &globalTime);
+  Time LocalToGlobalTime (Time localTime);
 
    /**
    * \brief Transform absolute Time from Global (simulator time) to Local (Local Node Time).
    */
-  void GlobalToLocalAbs (Time &globalDelay, Time &localDelay);
+  Time GlobalToLocalAbs (Time globalDelay);
   /**
    * \brief Transform absolute Time from Local (Local Node Time) to Global (simulator time).
    */
-  void LocalToGlobalAbs (Time &localDelay, Time &globalDelay);
+  Time LocalToGlobalAbs (Time localDelay);
   
   /**
    * \brief Insert a event in m_events to keep track of the events scheduled by this node.  

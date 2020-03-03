@@ -20,7 +20,8 @@
 #ifndef CLOCK_MODEL_IMPL_H
 #define CLOCK_MODEL_IMPL_H
 
-#include <object.h>
+#include "ns3/object.h"
+#include "ns3/nstime.h"
 
 /**
  * \file
@@ -29,7 +30,6 @@
  */
 
  namespace ns3{
-   class Time;
    /**
     * \ingroup clock
     * Clock model implementation
@@ -46,13 +46,13 @@
       /**  \copydoc ClockModel::GetLocalTime  */
       virtual void GetLocalTime (Time &time) = 0;
       /**  \copydoc ClockModel::GlobalToLocalAbs  */
-      virtual void GlobalToLocalTime (Time &globalTime, Time &localTime) = 0;
+      virtual Time GlobalToLocalTime (Time globalTime) = 0;
       /**  \copydoc ClockModel::LocalToGlobalAbs  */
-      virtual void LocalToGlobalTime (Time &localtime, Time &globalTime) = 0;
+      virtual Time LocalToGlobalTime (Time localtime) = 0;
       /**  \copydoc ClockModel::GlobalToLocalTime  */
-      virtual void GlobalToLocalAbs (Time &globaldDelay, Time &localDelay) = 0;
+      virtual Time GlobalToLocalAbs (Time globaldDelay) = 0;
       /**  \copydoc ClockModel::GlobalToLocalAbs  */
-      virtual void LocalToGlobalAbs (Time &localdelay, Time &localDelay) = 0;
+      virtual Time LocalToGlobalAbs (Time localdelay) = 0;
       
    };
  }// namespace ns3

@@ -19,7 +19,7 @@
  */
 
 #include "clock-model-impl.h"
-#include "log.h"
+#include "ns3/log.h"
 
 /**
  * \file clock

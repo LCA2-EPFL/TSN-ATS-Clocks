@@ -1,0 +1,25 @@
+## -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+
+def build(bld):
+    module = bld.create_ns3_module('clock',['core'])
+    module.source = [
+        'model/local-clock.cc',
+        'model/localtime-simulator-impl.cc',
+        'model/clock-model-impl.cc',
+        'model/perfect-clock-model-impl.cc',
+        'model/extended-event-id.cc',
+        ]
+
+
+    headers = bld(features='ns3header')
+    headers.module = 'clock'
+    headers.source = [
+        'model/local-clock.h',
+        'model/localtime-simulator-impl.h',
+        'model/clock-model-impl.h',
+        'model/perfect-clock-model-impl.h',
+        'model/extended-event-id.h',
+        ]
+
+    bld.ns3_python_bindings()

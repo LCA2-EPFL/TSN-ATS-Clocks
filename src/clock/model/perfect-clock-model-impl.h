@@ -18,13 +18,16 @@
  * Author: Guillermo Aguirre 
  */
 // TODO Logging 
+#ifndef PERFECT_CLOCK_MODEL_IMPL_H
+#define PERFECT_CLOCK_MODEL_IMPL_H
 
-#include <clock-model-impl.h>
+#include "clock-model-impl.h"
 
 namespace ns3 {
   /**
    * \file Clock
    * ns3::PerfectClockModelImpl declaration
+   * 
    * @brief This class represents a perfect clock modelling. 
    */
 
@@ -35,11 +38,12 @@ namespace ns3 {
     ~PerfectClockModelImpl ();
 
     //Inherit
-    void GetLocalTime (Time &time);
-    void GlobalToLocalTime (Time &globalTime, Time &localTime);
-    void LocalToGlobalTime (Time &localtime, Time &globalTime);
-    void GlobalToLocalAbs (Time &globaldDelay, Time &localDelay);
-    void LocalToGlobalAbs (Time &localdelay, Time &localDelay);
+
+    Time GetLocalTime ();
+    Time GlobalToLocalTime (Time globalTime);
+    Time LocalToGlobalTime (Time localtime);
+    Time GlobalToLocalAbs (Time globaldDelay);
+    Time LocalToGlobalAbs (Time localdelay);
 
   private:
   //Frequency of the clock
@@ -49,4 +53,5 @@ namespace ns3 {
   };
 
 
-}
+}//namespace ns3
+#endif /* PERFECT_CLOCK_MODEL_IMPL_H */

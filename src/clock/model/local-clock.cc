@@ -23,8 +23,7 @@
 
 
 #include "local-clock.h"
-#include "log.h"
-#include "time.h"
+#include "ns3/log.h"
 
 
 /**
@@ -51,7 +50,7 @@ LocalClock::GetTypeId (void)
 LocalClock::LocalClock (Ptr<ClockModelImpl> clock)
 {
   NS_LOG_FUNCTION (this);
-  m_clock = clock;
+  //m_clock = clock;
 }
 
 LocalClock::~LocalClock()
@@ -61,7 +60,7 @@ LocalClock::~LocalClock()
 
 void LocalClock::GetLocalTime (Time &time)
 {
-  m_clock->GetLocalTime(time);
+ // m_clock->GetLocalTime(time);
 }
 
 void LocalClock::SetClock (Ptr<ClockModelImpl> new_clock_model)
@@ -69,27 +68,35 @@ void LocalClock::SetClock (Ptr<ClockModelImpl> new_clock_model)
     //TODO
 }
 
-void LocalClock::GlobalToLocalTime (Time &globalTime, Time &localTime)
+Time LocalClock::GlobalToLocalTime (Time globalTime)
 {
-  m_clock->GlobalToLocalTime (globalTime, localTime);
+  // return m_clock->GlobalToLocalTime (globalTime);
+  Time t;
+  return t;
 }
 
-void LocalClock::LocalToGlobalTime (Time &localTime, Time &globalTime)
+Time LocalClock::LocalToGlobalTime (Time localTime)
 {
-  m_clock->LocalToGlobalTime (localTime, globalTime);
+  //return m_clock->LocalToGlobalTime (localTime);
+  Time t;
+  return t;
 }
 
-void LocalClock::GlobalToLocalAbs (Time &globalDelay, Time &localDelay)
+Time LocalClock::GlobalToLocalAbs (Time globalDelay)
 {
-  m_clock->GlobalToLocalAbs (globalDelay, localDelay);
+  //return m_clock->GlobalToLocalAbs (globalDelay);
+  Time t;
+  return t;
 }
 
-void LocalClock::LocalToGlobalAbs (Time &localDelay, Time &globalDelay)
+Time LocalClock::LocalToGlobalAbs (Time localDelay)
 {
-  m_clock->LocalToGlobalAbs (localDelay, globalDelay);
+  //return m_clock->LocalToGlobalAbs (localDelay);
+  Time t;
+  return t;
 }
 
-void LocalClock::InsertEvent()
+void LocalClock::InsertEvent(EventId event)
 {
   //TODO
 }
