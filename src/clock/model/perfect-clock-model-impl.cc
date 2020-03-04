@@ -49,6 +49,8 @@ PerfectClockModelImpl::GetTypeId (void)
 PerfectClockModelImpl::PerfectClockModelImpl ()
 {
   NS_LOG_FUNCTION (this);
+  m_timeUpdates.first = Simulator::Now();
+  m_timeUpdates.second = Simulator::Now();
 }
 
 PerfectClockModelImpl::PerfectClockModelImpl (double frequency)
