@@ -24,6 +24,8 @@
 
 #include "local-clock.h"
 #include "ns3/log.h"
+#include "ns3/simulator.h"
+
 
 
 /**
@@ -53,8 +55,8 @@ LocalClock::LocalClock ()
 }
 LocalClock::LocalClock (Ptr<ClockModelImpl> clock)
 {
-  NS_LOG_FUNCTION (this);
-  //m_clock = clock;
+  NS_LOG_FUNCTION (this << clock);
+  m_clock = clock;
 }
 
 LocalClock::~LocalClock()
@@ -62,54 +64,80 @@ LocalClock::~LocalClock()
   NS_LOG_FUNCTION (this);
 }
 
-void LocalClock::GetLocalTime (Time &time)
+Time LocalClock::GetLocalTime ()
 {
- // m_clock->GetLocalTime(time);
+  NS_LOG_FUNCTION (this);
+  return m_clock->GetLocalTime();
 }
 
-void LocalClock::SetClock (Ptr<ClockModelImpl> new_clock_model)
+void LocalClock::SetClock (Ptr<ClockModelImpl> newClock)
 {
-    //TODO
+    NS_LOG_FUNCTION (this << newClock);
+    NS_LOG_DEBUG ("New Clock");
+
+    for (std::list<Ptr<ExtendedEventId>>::const_iterator iter = m_events.begin(), end = m_events.end(); iter != end; ++iter)
+    {
+      if (Simulator::IsExpired ((*iter) -> GetEventId()))
+      {
+        //Todo: Remove from the list
+        m_events.remove ((*iter));
+      }
+      else
+      {
+        NS_LOG_DEBUG ("Rescheduling event");
+        Ptr<ClockModelImpl> oldClock;
+        oldClock = m_clock;
+        m_clock = newClock;
+        ReSchedule ((*iter) -> GetEventId (), oldClock);
+      }
+    }
 }
 
 Time LocalClock::GlobalToLocalTime (Time globalTime)
 {
-  // return m_clock->GlobalToLocalTime (globalTime);
-  Time t;
-  return t;
+  NS_LOG_FUNCTION (this << globalTime);
+  return m_clock->GlobalToLocalTime (globalTime);
 }
 
 Time LocalClock::LocalToGlobalTime (Time localTime)
 {
-  //return m_clock->LocalToGlobalTime (localTime);
-  Time t;
-  return t;
+  NS_LOG_FUNCTION (this << localTime);
+  return m_clock->LocalToGlobalTime (localTime);
 }
 
 Time LocalClock::GlobalToLocalAbs (Time globalDelay)
 {
-  //return m_clock->GlobalToLocalAbs (globalDelay);
-  Time t;
-  return t;
+  NS_LOG_FUNCTION (this << globalDelay);
+  return m_clock->GlobalToLocalAbs (globalDelay);
 }
 
 Time LocalClock::LocalToGlobalAbs (Time localDelay)
 {
-  //return m_clock->LocalToGlobalAbs (localDelay);
-  Time t;
-  return t;
+  NS_LOG_FUNCTION (this << localDelay);
+  return m_clock->LocalToGlobalAbs (localDelay);
 }
 
-void LocalClock::InsertEvent(EventId event)
+void LocalClock::InsertEvent( Ptr <ExtendedEventId> event)
 {
-  //TODO
+  NS_LOG_FUNCTION (this << event);
+  m_events.push_back (event);
 }
-void Reschedule(EventId event)
+void Reschedule(EventId event, Ptr<ClockModelImpl> oldClock)
 {
-  //TODO
+  Time globalOldDurationRemain;
+  Time eventTimeStamp;
+  Time localOldDurationRemain;
+
+  eventTimeStamp = Time(event.GetTs ());
+  Simulator::Remove (event);
+  globalOldDurationRemain = eventTimeStamp - Simulator::Now ();
+  
+  NS_ASSERT_MSG (globalOldDurationRemain.GetTimeStep () < 0, "Remaining GlobalTime is negative" << globalOldDurationRemain.GetTimeStep);
+  
+  localOldDurationRemain = oldClock -> GlobalToLocalAbs (globalOldDurationRemain);
+
+  NS_LOG_DEBUG ("Old Global Time" << globalOldDurationRemain << "to Old Local Time" << localOldDurationRemain);
+  
+  Simulator::Schedule (localOldDurationRemain, event.PeekEventImpl());
 }
-void UpdateGlobalAbs()
-{
-  //TODO
-}
-}//namespace
+}//namespace ns3

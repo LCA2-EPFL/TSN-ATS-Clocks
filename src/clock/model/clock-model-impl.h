@@ -45,7 +45,7 @@
       virtual ~ClockModelImpl();
 
       /**  \copydoc ClockModel::GetLocalTime  */
-      virtual void GetLocalTime (Time &time) = 0;
+      virtual Time GetLocalTime () = 0;
       /**  \copydoc ClockModel::GlobalToLocalAbs  */
       virtual Time GlobalToLocalTime (Time globalTime) = 0;
       /**  \copydoc ClockModel::LocalToGlobalAbs  */

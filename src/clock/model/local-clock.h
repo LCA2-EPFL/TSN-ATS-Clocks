@@ -26,7 +26,7 @@
 #include "ns3/event-id.h"
 #include "ns3/ptr.h"
 #include "ns3/nstime.h"
-
+#include "extended-event-id.h"
 namespace ns3 {
 /**
  * \file
@@ -65,7 +65,7 @@ public:
    * Return a local time that corresponds to node own clock, different
    * from Simulator::Now().
    */
-  void GetLocalTime (Time &time);
+  Time GetLocalTime ();
   /**
    * \brief associate a clock model implementation to the clock of the node.
    * This function is going to be called every time a change on the node clock happens 
@@ -97,7 +97,7 @@ public:
   /**
    * \brief Insert a event in m_events to keep track of the events scheduled by this node.  
    */
-  void InsertEvent (EventId event);
+  void InsertEvent (Ptr <ExtendedEventId> event);
   
 private:
   //TODO: define ExtendedEventId
@@ -105,15 +105,12 @@ private:
   /**
    * \brief ReSchedule an Event in the main simulator. 
    */
-  void ReSchedule (EventId eventId);
-  void UpdateGlobalAbs ();
+  void ReSchedule (EventId eventId, Ptr<ClockModelImpl> oldClock);
 
   //Clock implementation for the local clock
   Ptr<ClockModelImpl> m_clock;  
   //List of events schedulled by this node.           
-  std::list<EventId> m_events;      
-
-
+  std::list<Ptr<ExtendedEventId>> m_events;      
 };
 
 }// namespace ns3

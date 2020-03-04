@@ -21,6 +21,7 @@
 #define EXTENDED_EVENT_ID_H
 
 #include "ns3/event-id.h"
+#include "ns3/object.h"
 /**
  * \file
  * \ingroup events
@@ -38,14 +39,19 @@ class EventId;
  * is used in LocalClock class in order to maintain a list of scheduled events by the node asociated with 
  * a local time stamp.   
  */
-class ExtendedEventId{
+class ExtendedEventId : public Object
+{
 public:
+static TypeId GetTypeId (void);
 
-ExtendedEventId (EventId eventid, uint64_t localTimeStamp);
+ExtendedEventId ();
 ~ExtendedEventId ();
 
 EventId GetEventId ();
 uint64_t GetLocalTimeStamp ();
+
+void SetEventId (EventId event);
+void SetLocalTimeStamp (uint64_t timeStamp);
 private:
 //Event ID
 EventId m_eventId;

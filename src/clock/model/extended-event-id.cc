@@ -31,11 +31,25 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("ExtendedEventId");
 
-ExtendedEventId::ExtendedEventId (EventId eventid, uint64_t localTimeStamp)
+TypeId
+ExtendedEventId::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::ExtendedEventId")
+    .SetParent<Object> ()
+    .SetGroupName ("Clock")
+    .AddConstructor<ExtendedEventId> ()
+  ;
+  return tid;
+}
+
+ExtendedEventId::ExtendedEventId ()
 {  
   NS_LOG_FUNCTION (this);
-  //m_eventId = EventId(eventid.PeekEventImpl, eventid.GetTs, eventid.GetContext, eventid.GetUid);
-  //m_localTimeStamp = localTimeStamp; 
+}
+
+ExtendedEventId::~ExtendedEventId ()
+{
+  NS_LOG_FUNCTION (this);
 }
 
 EventId
@@ -43,10 +57,23 @@ ExtendedEventId::GetEventId ()
 {
   return m_eventId;
 }
+
 uint64_t 
 ExtendedEventId::GetLocalTimeStamp ()
 {
   return m_localTimeStamp;
+}
+
+void
+ExtendedEventId::SetEventId (EventId event)
+{
+  m_eventId = event;
+}
+
+void
+ExtendedEventId::SetLocalTimeStamp (uint64_t timeStamp)
+{
+  m_localTimeStamp = timeStamp;
 }
 } //namespace
 
