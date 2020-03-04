@@ -88,7 +88,7 @@ void LocalClock::SetClock (Ptr<ClockModelImpl> newClock)
         Ptr<ClockModelImpl> oldClock;
         oldClock = m_clock;
         m_clock = newClock;
-        ReSchedule ((*iter) -> GetEventId (), oldClock);
+        LocalClock::ReSchedule ((*iter) -> GetEventId (), oldClock);
       }
     }
 }
@@ -122,7 +122,7 @@ void LocalClock::InsertEvent( Ptr <ExtendedEventId> event)
   NS_LOG_FUNCTION (this << event);
   m_events.push_back (event);
 }
-void Reschedule(EventId event, Ptr<ClockModelImpl> oldClock)
+void LocalClock::ReSchedule(EventId event, Ptr<ClockModelImpl> oldClock)
 {
   Time globalOldDurationRemain;
   Time eventTimeStamp;
