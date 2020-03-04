@@ -24,12 +24,28 @@
 #include "perfect-clock-model-impl.h"
 #include "ns3/log.h"
 #include "ns3/simulator.h"
+#include "ns3/double.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("PerfectClockModelImpl");
 
 NS_OBJECT_ENSURE_REGISTERED (PerfectClockModelImpl);
+
+TypeId
+PerfectClockModelImpl::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::PerfectClockModelImpl")
+    .SetParent<ClockModelImpl> ()
+    .SetGroupName ("clock")
+    .AddAttribute ("Frequency", "Frequency of the clock",
+                  DoubleValue(0),
+                  MakeDoubleAccessor (&PerfectClockModelImpl::m_frequency),
+                  MakeDoubleChecker <double>());
+    
+}
+ 
+
 
 PerfectClockModelImpl::PerfectClockModelImpl (double frequency)
 {

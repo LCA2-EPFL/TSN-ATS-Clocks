@@ -37,7 +37,7 @@ ClockModelImpl::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::ClockModelImpl")
     .SetParent<Object> ()
-    .SetGroupName ("Core")
+    .SetGroupName ("Clock")
   ;
   return tid;
 }
