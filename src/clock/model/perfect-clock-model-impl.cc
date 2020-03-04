@@ -38,6 +38,7 @@ PerfectClockModelImpl::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::PerfectClockModelImpl")
     .SetParent<ClockModelImpl> ()
     .SetGroupName ("clock")
+    .AddConstructor<PerfectClockModelImpl> ()
     .AddAttribute ("Frequency", "Frequency of the clock",
                   DoubleValue(0),
                   MakeDoubleAccessor (&PerfectClockModelImpl::m_frequency),
@@ -45,7 +46,10 @@ PerfectClockModelImpl::GetTypeId (void)
     
 }
  
-
+PerfectClockModelImpl::PerfectClockModelImpl ()
+{
+  NS_LOG_FUNCTION (this);
+}
 
 PerfectClockModelImpl::PerfectClockModelImpl (double frequency)
 {
