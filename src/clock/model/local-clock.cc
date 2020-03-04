@@ -88,7 +88,9 @@ void LocalClock::SetClock (Ptr<ClockModelImpl> newClock)
         Ptr<ClockModelImpl> oldClock;
         oldClock = m_clock;
         m_clock = newClock;
+        //TODO Is doing a loop??
         LocalClock::ReSchedule ((*iter) -> GetEventId (), oldClock);
+        m_events.remove ((*iter));
       }
     }
 }
@@ -128,15 +130,15 @@ void LocalClock::ReSchedule(EventId event, Ptr<ClockModelImpl> oldClock)
   Time eventTimeStamp;
   Time localOldDurationRemain;
 
-  eventTimeStamp = Time(event.GetTs ());
+  eventTimeStamp = TimeStep (event.GetTs ());
   Simulator::Remove (event);
   globalOldDurationRemain = eventTimeStamp - Simulator::Now ();
   
-  NS_ASSERT_MSG (globalOldDurationRemain.GetTimeStep () < 0, "Remaining GlobalTime is negative" << globalOldDurationRemain.GetTimeStep);
+  NS_ASSERT_MSG (globalOldDurationRemain.GetTimeStep () < 0, "Remaining GlobalTime is negative" << globalOldDurationRemain.GetTimeStep ());
   
   localOldDurationRemain = oldClock -> GlobalToLocalAbs (globalOldDurationRemain);
 
-  NS_LOG_DEBUG ("Old Global Time" << globalOldDurationRemain << "to Old Local Time" << localOldDurationRemain);
+  NS_LOG_DEBUG ("Old Global Time" << globalOldDurationRemain.GetTimeStep () << "to Old Local Time" << localOldDurationRemain.GetTimeStep ());
   
   Simulator::Schedule (localOldDurationRemain, event.PeekEventImpl());
 }

@@ -21,6 +21,7 @@
 #define LOCALTIME_SIMULATOR_IMPL_H
 
 #include "ns3/default-simulator-impl.h"
+#include "local-clock.h"
 
 
 

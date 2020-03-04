@@ -27,6 +27,7 @@
 #include "ns3/assert.h"
 #include "ns3/node-list.h"
 #include "ns3/node.h"
+#include "extended-event-id.h"
 
 
 
@@ -68,10 +69,23 @@ LocalTimeSimulatorImpl::~LocalTimeSimulatorImpl ()
 EventId
 LocalTimeSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
 {
-  Ptr<Node>  n = NodeList::GetNode(m_currentContext);
-  //TODO
-  EventId id;
-  return id;
+  NS_LOG_FUNCTION (this << delay << event);
+
+  m_currentContext = DefaultSimulatorImpl::GetContext ();
+  Ptr <Node>  n = NodeList::GetNode (m_currentContext);
+  Ptr <LocalClock> clock = n -> GetObject <LocalClock> ();
+  Time globalTimeDelay = clock -> LocalToGlobalAbs (delay);
+  EventId eventId = DefaultSimulatorImpl::Schedule (globalTimeDelay, event);
+
+  Ptr <ExtendedEventId> extendedEventId = CreateObject <ExtendedEventId> ();
+
+  extendedEventId -> SetEventId (eventId);
+  Time localTimeStamp = clock -> LocalToGlobalTime (TimeStep (eventId.GetTs ()));
+  extendedEventId -> SetLocalTimeStamp (localTimeStamp.GetTimeStep ());
+
+  clock -> InsertEvent (extendedEventId);
+
+  return eventId;
 }
 void
 LocalTimeSimulatorImpl::ScheduleWithContext (uint32_t context, Time const &delay, EventImpl *event)
