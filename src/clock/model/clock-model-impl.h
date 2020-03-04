@@ -42,6 +42,7 @@
        * \return The object TypeId
        */
       static TypeId GetTypeId (void);
+      virtual ~ClockModelImpl();
 
       /**  \copydoc ClockModel::GetLocalTime  */
       virtual void GetLocalTime (Time &time) = 0;

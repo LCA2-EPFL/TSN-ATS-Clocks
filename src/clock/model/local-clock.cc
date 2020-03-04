@@ -46,7 +46,11 @@ LocalClock::GetTypeId (void)
   ;
   return tid;
 }
+LocalClock::LocalClock ()
+{
+  NS_LOG_FUNCTION (this);
 
+}
 LocalClock::LocalClock (Ptr<ClockModelImpl> clock)
 {
   NS_LOG_FUNCTION (this);
@@ -100,7 +104,7 @@ void LocalClock::InsertEvent(EventId event)
 {
   //TODO
 }
-void Reschedule()
+void Reschedule(EventId event)
 {
   //TODO
 }

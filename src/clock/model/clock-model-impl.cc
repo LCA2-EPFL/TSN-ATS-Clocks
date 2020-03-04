@@ -41,5 +41,9 @@ ClockModelImpl::GetTypeId (void)
   ;
   return tid;
 }
-  
+
+ClockModelImpl::~ClockModelImpl ()
+{
+  NS_LOG_FUNCTION (this);
+}
 }
