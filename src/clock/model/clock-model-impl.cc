@@ -18,7 +18,7 @@
  * Author: Guillermo Aguirre 
  */
 
-#include "clock-model-impl.h"
+#include "ns3/clock-model-impl.h"
 #include "ns3/log.h"
 
 /**
@@ -40,10 +40,5 @@ ClockModelImpl::GetTypeId (void)
     .SetGroupName ("Clock")
   ;
   return tid;
-}
-
-ClockModelImpl::~ClockModelImpl ()
-{
-  NS_LOG_FUNCTION (this);
 }
 }

@@ -22,7 +22,7 @@
 
 
 
-#include "local-clock.h"
+#include "ns3/local-clock.h"
 #include "ns3/log.h"
 #include "ns3/simulator.h"
 
@@ -43,21 +43,17 @@ LocalClock::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::LocalClock")
     .SetParent<Object> ()
-    .SetGroupName ("Core")
+    .SetGroupName ("Clock")
     .AddConstructor<LocalClock> ()
   ;
   return tid;
 }
+
 LocalClock::LocalClock ()
 {
   NS_LOG_FUNCTION (this);
+}
 
-}
-LocalClock::LocalClock (Ptr<ClockModelImpl> clock)
-{
-  NS_LOG_FUNCTION (this << clock);
-  m_clock = clock;
-}
 
 LocalClock::~LocalClock()
 {

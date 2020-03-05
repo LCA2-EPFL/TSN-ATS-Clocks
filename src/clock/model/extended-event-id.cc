@@ -17,7 +17,7 @@
  *
  * 
  */
-#include "extended-event-id.h"
+#include "ns3/extended-event-id.h"
 #include "ns3/log.h"
 
 

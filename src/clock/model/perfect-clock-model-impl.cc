@@ -21,7 +21,7 @@
  */
 // TODO Logging 
 
-#include "perfect-clock-model-impl.h"
+#include "ns3/perfect-clock-model-impl.h"
 #include "ns3/log.h"
 #include "ns3/simulator.h"
 #include "ns3/double.h"
@@ -37,13 +37,14 @@ PerfectClockModelImpl::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::PerfectClockModelImpl")
     .SetParent<ClockModelImpl> ()
-    .SetGroupName ("clock")
+    .SetGroupName ("Clock")
     .AddConstructor<PerfectClockModelImpl> ()
     .AddAttribute ("Frequency", "Frequency of the clock",
                   DoubleValue(0),
                   MakeDoubleAccessor (&PerfectClockModelImpl::m_frequency),
-                  MakeDoubleChecker <double>());
-    
+                  MakeDoubleChecker <double>())
+  ;
+  return tid;
 }
  
 PerfectClockModelImpl::PerfectClockModelImpl ()
@@ -51,15 +52,10 @@ PerfectClockModelImpl::PerfectClockModelImpl ()
   NS_LOG_FUNCTION (this);
   m_timeUpdates.first = Simulator::Now();
   m_timeUpdates.second = Simulator::Now();
+  m_frequency = 2.0;
 }
 
-PerfectClockModelImpl::PerfectClockModelImpl (double frequency)
-{
-  NS_LOG_FUNCTION (this << frequency);
-  m_frequency = frequency;
-  m_timeUpdates.first = Simulator::Now();
-  m_timeUpdates.second = Simulator::Now();
-}
+
 PerfectClockModelImpl::~PerfectClockModelImpl ()
 {
   NS_LOG_FUNCTION (this);
@@ -94,6 +90,7 @@ Time PerfectClockModelImpl::GlobalToLocalTime (Time globalTime)
   NS_LOG_DEBUG("Local Time: " << localTime <<" From Global Time: "<< globalTime);
   return localTime;
 }
+
 Time PerfectClockModelImpl::LocalToGlobalTime (Time localTime)
 {
   NS_LOG_FUNCTION (this << localTime);
@@ -108,6 +105,7 @@ Time PerfectClockModelImpl::LocalToGlobalTime (Time localTime)
   NS_LOG_DEBUG ( "Global Time:" << globalTime << "From Local Time: " << localTime);
   return globalTime;
 }
+
 Time PerfectClockModelImpl::GlobalToLocalAbs (Time globaldDelay)
 {
   NS_LOG_FUNCTION (this << globaldDelay);
@@ -116,6 +114,7 @@ Time PerfectClockModelImpl::GlobalToLocalAbs (Time globaldDelay)
   NS_LOG_DEBUG ("Local Delay: " << localDelay << "From Global Delay: " << globaldDelay);
   return localDelay;
 }
+
 Time PerfectClockModelImpl::LocalToGlobalAbs (Time localDelay)
 {
   NS_LOG_FUNCTION (this << localDelay);

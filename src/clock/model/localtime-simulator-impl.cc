@@ -84,9 +84,12 @@ LocalTimeSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
   extendedEventId -> SetLocalTimeStamp (localTimeStamp.GetTimeStep ());
 
   clock -> InsertEvent (extendedEventId);
+  NS_LOG_DEBUG ("Event scheduled");
+  
 
   return eventId;
 }
+
 void
 LocalTimeSimulatorImpl::ScheduleWithContext (uint32_t context, Time const &delay, EventImpl *event)
 {

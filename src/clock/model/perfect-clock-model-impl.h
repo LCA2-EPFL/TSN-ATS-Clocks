@@ -21,36 +21,39 @@
 #ifndef PERFECT_CLOCK_MODEL_IMPL_H
 #define PERFECT_CLOCK_MODEL_IMPL_H
 
-#include "clock-model-impl.h"
+#include "ns3/clock-model-impl.h"
+#include "ns3/object.h"
 
 namespace ns3 {
-  /**
-   * \file Clock
-   * ns3::PerfectClockModelImpl declaration
-   * 
-   * @brief This class represents a perfect clock modelling. 
-   */
+/**
+ * \file Clock
+ * ns3::PerfectClockModelImpl declaration
+ * 
+ * @brief This class represents a perfect clock modelling. 
+ */
 
-  class PerfectClockModelImpl : public ClockModelImpl
-  {
-  public: 
-    PerfectClockModelImpl (double frequency);
-    ~PerfectClockModelImpl ();
+class PerfectClockModelImpl : public ClockModelImpl
+{
+public:
+  static TypeId GetTypeId (void);
 
-    //Inherit
+  PerfectClockModelImpl ();
+  ~PerfectClockModelImpl ();
 
-    Time GetLocalTime ();
-    Time GlobalToLocalTime (Time globalTime);
-    Time LocalToGlobalTime (Time localtime);
-    Time GlobalToLocalAbs (Time globaldDelay);
-    Time LocalToGlobalAbs (Time localdelay);
+  //Inherit
 
-  private:
-  //Frequency of the clock
-    double m_frequency;
-  // Pair of last update <locatime, simulatortime>
-    std::pair<Time,Time> m_timeUpdates;
-  };
+  Time GetLocalTime ();
+  Time GlobalToLocalTime (Time globalTime);
+  Time LocalToGlobalTime (Time localtime);
+  Time GlobalToLocalAbs (Time globaldDelay);
+  Time LocalToGlobalAbs (Time localdelay);
+
+private:
+//Frequency of the clock
+  double m_frequency;
+// Pair of last update <locatime, simulatortime>
+  std::pair<Time,Time> m_timeUpdates;
+};
 
 
 }//namespace ns3

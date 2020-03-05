@@ -1,25 +1,39 @@
-## -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+# -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 
+# def options(opt):
+#     pass
+
+# def configure(conf):
+#     conf.check_nonfatal(header_name='stdint.h', define_name='HAVE_STDINT_H')
 
 def build(bld):
-    module = bld.create_ns3_module('clock',['core'])
+    module = bld.create_ns3_module('clock', ['core'])
     module.source = [
+        'model/clock-model-impl.cc',
+        'model/extended-event-id.cc',
         'model/local-clock.cc',
         'model/localtime-simulator-impl.cc',
-        'model/clock-model-impl.cc',
         'model/perfect-clock-model-impl.cc',
-        'model/extended-event-id.cc',
+        'helper/clock-helper.cc',
         ]
 
+    module_test = bld.create_ns3_module_test_library('clock')
+    module_test.source = [
+        'test/clock-test-suite.cc',
+        ]
 
     headers = bld(features='ns3header')
     headers.module = 'clock'
     headers.source = [
+        'model/clock-model-impl.h',
+        'model/extended-event-id.h',
         'model/local-clock.h',
         'model/localtime-simulator-impl.h',
-        'model/clock-model-impl.h',
         'model/perfect-clock-model-impl.h',
-        'model/extended-event-id.h',
+        'helper/clock-helper.h',
         ]
 
-    bld.ns3_python_bindings()
+   
+
+    # bld.ns3_python_bindings()
+

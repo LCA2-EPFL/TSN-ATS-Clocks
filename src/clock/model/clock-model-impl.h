@@ -21,6 +21,7 @@
 #define CLOCK_MODEL_IMPL_H
 
 #include "ns3/object.h"
+#include "ns3/object-factory.h"
 #include "ns3/nstime.h"
 
 /**
@@ -29,33 +30,32 @@
  * ns3:ClockModelImpl declaration
  */
 
- namespace ns3{
-   /**
-    * \ingroup clock
-    * Clock model implementation
-    */ 
-   class ClockModelImpl : public Object
-   {
-    public:
-      /**
-       * Register this type
-       * \return The object TypeId
-       */
-      static TypeId GetTypeId (void);
-      virtual ~ClockModelImpl();
+namespace ns3{
+/**
+* \ingroup clock
+* Clock model implementation
+*/ 
+class ClockModelImpl : public Object
+{
+public:
+  /**
+   * Register this type
+   * \return The object TypeId
+   */
+  static TypeId GetTypeId (void);
 
-      /**  \copydoc ClockModel::GetLocalTime  */
-      virtual Time GetLocalTime () = 0;
-      /**  \copydoc ClockModel::GlobalToLocalAbs  */
-      virtual Time GlobalToLocalTime (Time globalTime) = 0;
-      /**  \copydoc ClockModel::LocalToGlobalAbs  */
-      virtual Time LocalToGlobalTime (Time localtime) = 0;
-      /**  \copydoc ClockModel::GlobalToLocalTime  */
-      virtual Time GlobalToLocalAbs (Time globaldDelay) = 0;
-      /**  \copydoc ClockModel::GlobalToLocalAbs  */
-      virtual Time LocalToGlobalAbs (Time localdelay) = 0;
-      
-   };
- }// namespace ns3
+  /**  \copydoc ClockModel::GetLocalTime  */
+  virtual Time GetLocalTime () = 0;
+  /**  \copydoc ClockModel::GlobalToLocalAbs  */
+  virtual Time GlobalToLocalTime (Time globalTime) = 0;
+  /**  \copydoc ClockModel::LocalToGlobalAbs  */
+  virtual Time LocalToGlobalTime (Time localtime) = 0;
+  /**  \copydoc ClockModel::GlobalToLocalTime  */
+  virtual Time GlobalToLocalAbs (Time globaldDelay) = 0;
+  /**  \copydoc ClockModel::GlobalToLocalAbs  */
+  virtual Time LocalToGlobalAbs (Time localdelay) = 0;
+  
+};
+}// namespace ns3
 
 #endif /* CLOCK_MODEL_IMPL_H */

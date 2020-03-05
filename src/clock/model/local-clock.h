@@ -21,12 +21,13 @@
 #define LOCAL_CLOCK_H
 
 #include "ns3/object.h"
-#include "clock-model-impl.h"
+#include "ns3/object-factory.h"
+#include "ns3/clock-model-impl.h"
 #include "ns3/scheduler.h"
 #include "ns3/event-id.h"
 #include "ns3/ptr.h"
 #include "ns3/nstime.h"
-#include "extended-event-id.h"
+#include "ns3/extended-event-id.h"
 namespace ns3 {
 /**
  * \file
@@ -58,7 +59,6 @@ public:
    * \param ClockModelImpl a implementation of a ClockModel Class.
    */
   LocalClock ();
-  LocalClock (Ptr<ClockModelImpl> clock_model);
   ~LocalClock ();
 
   /**

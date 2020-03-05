@@ -19,6 +19,9 @@
 #include "ns3/internet-module.h"
 #include "ns3/point-to-point-module.h"
 #include "ns3/applications-module.h"
+#include "ns3/local-clock.h"
+#include "ns3/perfect-clock-model-impl.h"
+#include  "ns3/object.h"
 
 using namespace ns3;
 
@@ -29,14 +32,30 @@ main (int argc, char *argv[])
 {
   CommandLine cmd;
   cmd.Parse (argc, argv);
+
+  // Set LocalTime Simulator Impl
+  GlobalValue::Bind ("SimulatorImplementationType", 
+                     StringValue ("ns3::LocalTimeSimulatorImpl"));
   
   Time::SetResolution (Time::NS);
   LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_INFO);
   LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
+  LogComponentEnable ("PerfectClockModelImpl",LOG_LEVEL_INFO);
 
   NodeContainer nodes;
   nodes.Create (2);
+  Ptr<Node> n3 = CreateObject<Node> ();
 
+  //Aggregate clock 
+
+  Ptr<PerfectClockModelImpl> clockImpl = CreateObject<PerfectClockModelImpl> ();
+  Ptr<LocalClock> clock = CreateObject<LocalClock> ();
+  Ptr<Node> n1 = nodes.Get(0);
+  Ptr<Node> n2 = nodes.Get (1); 
+  n1 -> AggregateObject (clock);
+  n2 -> AggregateObject (clock);
+  
+  
   PointToPointHelper pointToPoint;
   pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
   pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
