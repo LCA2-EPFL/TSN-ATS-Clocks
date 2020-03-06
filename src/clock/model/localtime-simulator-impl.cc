@@ -58,6 +58,7 @@ LocalTimeSimulatorImpl::GetTypeId (void)
 LocalTimeSimulatorImpl::LocalTimeSimulatorImpl()
 {
   NS_LOG_FUNCTION (this);
+  NS_LOG_DEBUG ("Local Time Simulator implementation created");
   m_currentContext = Simulator::NO_CONTEXT;
 }
 
@@ -69,8 +70,8 @@ LocalTimeSimulatorImpl::~LocalTimeSimulatorImpl ()
 EventId
 LocalTimeSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
 {
-  NS_LOG_FUNCTION (this << delay << event);
-
+  NS_LOG_INFO (this << delay << event);
+  NS_LOG_DEBUG ("Sheduling events...");
   m_currentContext = DefaultSimulatorImpl::GetContext ();
   Ptr <Node>  n = NodeList::GetNode (m_currentContext);
   Ptr <LocalClock> clock = n -> GetObject <LocalClock> ();
@@ -84,15 +85,17 @@ LocalTimeSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
   extendedEventId -> SetLocalTimeStamp (localTimeStamp.GetTimeStep ());
 
   clock -> InsertEvent (extendedEventId);
-  NS_LOG_DEBUG ("Event scheduled");
   
-
   return eventId;
 }
 
 void
 LocalTimeSimulatorImpl::ScheduleWithContext (uint32_t context, Time const &delay, EventImpl *event)
 {
+  NS_LOG_INFO (this << context << delay << event);
   //TODO
+  NS_LOG_DEBUG ("Sheduling events with context.........");
+  DefaultSimulatorImpl::ScheduleWithContext (context,delay,event);
+
 }
 }// namespace ns

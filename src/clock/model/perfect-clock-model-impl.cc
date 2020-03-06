@@ -26,6 +26,7 @@
 #include "ns3/simulator.h"
 #include "ns3/double.h"
 
+
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("PerfectClockModelImpl");
@@ -40,9 +41,9 @@ PerfectClockModelImpl::GetTypeId (void)
     .SetGroupName ("Clock")
     .AddConstructor<PerfectClockModelImpl> ()
     .AddAttribute ("Frequency", "Frequency of the clock",
-                  DoubleValue(0),
+                  DoubleValue(2),
                   MakeDoubleAccessor (&PerfectClockModelImpl::m_frequency),
-                  MakeDoubleChecker <double>())
+                  MakeDoubleChecker <double> ())
   ;
   return tid;
 }
@@ -52,7 +53,8 @@ PerfectClockModelImpl::PerfectClockModelImpl ()
   NS_LOG_FUNCTION (this);
   m_timeUpdates.first = Simulator::Now();
   m_timeUpdates.second = Simulator::Now();
-  m_frequency = 2.0;
+  m_frequency = 2;
+  NS_LOG_DEBUG ("Perfect Clock Created with double freq");
 }
 
 
@@ -98,7 +100,7 @@ Time PerfectClockModelImpl::LocalToGlobalTime (Time localTime)
   Time globalDuration;
   Time localDuration = localTime - std::get<0>(m_timeUpdates);
   
-  NS_ASSERT_MSG (localDuration < 0, "Local Duration" << localDuration << "negative. Cannot calculate LocalToGlobalTime");
+  //NS_ASSERT_MSG (localDuration < -1, "Local Duration:" << localDuration << "negative. Cannot calculate LocalToGlobalTime");
 
   globalDuration = LocalToGlobalAbs (localDuration);
   globalTime = globalDuration + std::get<1>(m_timeUpdates);
@@ -108,9 +110,9 @@ Time PerfectClockModelImpl::LocalToGlobalTime (Time localTime)
 
 Time PerfectClockModelImpl::GlobalToLocalAbs (Time globaldDelay)
 {
-  NS_LOG_FUNCTION (this << globaldDelay);
+  NS_LOG_FUNCTION (this << globaldDelay); 
   Time localDelay;
-  localDelay = globaldDelay / m_frequency;
+  localDelay = Time::FromDouble (globaldDelay.GetTimeStep () / (m_frequency),Time::NS);
   NS_LOG_DEBUG ("Local Delay: " << localDelay << "From Global Delay: " << globaldDelay);
   return localDelay;
 }
@@ -119,7 +121,7 @@ Time PerfectClockModelImpl::LocalToGlobalAbs (Time localDelay)
 {
   NS_LOG_FUNCTION (this << localDelay);
   Time globalDelay;
-  globalDelay = localDelay * m_frequency;
+  globalDelay = Time::FromDouble (localDelay.GetTimeStep () * m_frequency, Time::NS);
   NS_LOG_DEBUG ("Global Delay: " << globalDelay << "From Local Delay: " << localDelay);
   return globalDelay;
 }

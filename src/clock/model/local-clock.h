@@ -55,10 +55,12 @@ public:
    */
   static TypeId GetTypeId (void);
   
+  LocalClock ();
+
   /**
    * \param ClockModelImpl a implementation of a ClockModel Class.
    */
-  LocalClock ();
+  LocalClock(Ptr<ClockModelImpl> clock);
   ~LocalClock ();
 
   /**

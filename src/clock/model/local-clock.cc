@@ -25,6 +25,8 @@
 #include "ns3/local-clock.h"
 #include "ns3/log.h"
 #include "ns3/simulator.h"
+#include "ns3/pointer.h"
+
 
 
 
@@ -45,6 +47,11 @@ LocalClock::GetTypeId (void)
     .SetParent<Object> ()
     .SetGroupName ("Clock")
     .AddConstructor<LocalClock> ()
+    .AddAttribute ("ClockModelImpl",
+                  "The clock model implementation used to simulate local clock",
+                  PointerValue (),
+                  MakePointerAccessor (&LocalClock::m_clock),
+                  MakePointerChecker<ClockModelImpl> ())
   ;
   return tid;
 }
@@ -54,6 +61,12 @@ LocalClock::LocalClock ()
   NS_LOG_FUNCTION (this);
 }
 
+LocalClock::LocalClock (Ptr<ClockModelImpl> clock)
+{
+  NS_LOG_FUNCTION (this);
+  m_clock = clock;
+  NS_LOG_DEBUG ("Create Local Clock with contructor");
+}
 
 LocalClock::~LocalClock()
 {
@@ -64,6 +77,7 @@ Time LocalClock::GetLocalTime ()
 {
   NS_LOG_FUNCTION (this);
   return m_clock->GetLocalTime();
+
 }
 
 void LocalClock::SetClock (Ptr<ClockModelImpl> newClock)
@@ -119,6 +133,7 @@ void LocalClock::InsertEvent( Ptr <ExtendedEventId> event)
 {
   NS_LOG_FUNCTION (this << event);
   m_events.push_back (event);
+  NS_LOG_DEBUG ("Inserting event in the list");
 }
 void LocalClock::ReSchedule(EventId event, Ptr<ClockModelImpl> oldClock)
 {
