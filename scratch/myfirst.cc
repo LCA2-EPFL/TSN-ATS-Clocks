@@ -26,6 +26,7 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("FirstScriptExample");
 
+void setClock (Ptr<LocalClock> clock, double freq);
 int
 main (int argc, char *argv[])
 {
@@ -50,9 +51,9 @@ main (int argc, char *argv[])
 
   Ptr<PerfectClockModelImpl> clockImpl0 = CreateObject <PerfectClockModelImpl> ();
   Ptr<PerfectClockModelImpl> clockImpl1 = CreateObject <PerfectClockModelImpl> ();
-  clockImpl0 -> SetAttribute ("Frequency", DoubleValue (1.5));
+  clockImpl0 -> SetAttribute ("Frequency", DoubleValue (1));
 
-  clockImpl1 -> SetAttribute ("Frequency", DoubleValue (1.5));
+  clockImpl1 -> SetAttribute ("Frequency", DoubleValue (1));
 
   //Config::SetDefault ("ns3::LocalClock::ClockModelImpl", PointerValue (clockImpl0));
   
@@ -62,11 +63,14 @@ main (int argc, char *argv[])
   clock0 -> SetAttribute ("ClockModelImpl", PointerValue (clockImpl0));
   clock1 -> SetAttribute ("ClockModelImpl", PointerValue (clockImpl1));
 
-  Ptr<Node> n1 = nodes.Get(0);
+  Ptr<Node> n1 = nodes.Get (0);
   Ptr<Node> n2 = nodes.Get (1); 
 
   n1 -> AggregateObject (clock0);
   n2 -> AggregateObject (clock1);
+
+
+
 
   PointToPointHelper pointToPoint;
   pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
@@ -90,15 +94,28 @@ main (int argc, char *argv[])
   serverApps.Stop (Seconds (200.0));
 
   UdpEchoClientHelper echoClient (interfaces.GetAddress (1), 9);
-  echoClient.SetAttribute ("MaxPackets", UintegerValue (1));
+  echoClient.SetAttribute ("MaxPackets", UintegerValue (10));
   echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
   echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
 
   ApplicationContainer clientApps = echoClient.Install (nodes.Get (0));
   clientApps.Start (Seconds (2.0));
   clientApps.Stop (Seconds (200.0));
-
+  
+  UintegerValue idNode;
+  n1 ->GetAttribute ("Id", idNode);
+  uint32_t num = idNode.Get ();
+  std::cout << "ID\n" << num;  
+  Simulator::ScheduleWithContext (num, Seconds (5.0), &setClock, clock0, 2.0);
   Simulator::Run ();
   Simulator::Destroy ();
   return 0;
+}
+
+void setClock (Ptr<LocalClock> clock, double freq)
+{
+  NS_LOG_DEBUG ("Calling function set clock");
+  Ptr<PerfectClockModelImpl> clockImpl = CreateObject <PerfectClockModelImpl> ();
+  clockImpl -> SetAttribute ("Frequency", DoubleValue (freq));
+  clock -> SetClock (clockImpl);
 }

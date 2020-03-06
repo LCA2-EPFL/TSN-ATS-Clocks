@@ -245,7 +245,7 @@ DefaultSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
   m_uid++;
   m_unscheduledEvents++;
   m_events->Insert (ev);
-
+  NS_LOG_DEBUG ("Current time: " << TimeStep (m_currentTs));
   NS_LOG_DEBUG ("Sheduling events......... at time...... " << time << "with context: " <<  m_currentContext  );
 
   return EventId (event, ev.key.m_ts, ev.key.m_context, ev.key.m_uid);
@@ -257,7 +257,7 @@ DefaultSimulatorImpl::ScheduleWithContext (uint32_t context, Time const &delay, 
   NS_LOG_FUNCTION (this << context << delay.GetTimeStep () << event);
     
   Time time = Simulator::Now() + delay ;
-
+  NS_LOG_DEBUG ("Current time: " << TimeStep (m_currentTs));
   NS_LOG_DEBUG ("Sheduling events......... at time......" << time << "Node: " << context);
 
   if (SystemThread::Equals (m_main))

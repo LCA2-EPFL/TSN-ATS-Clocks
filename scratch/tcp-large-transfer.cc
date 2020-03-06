@@ -39,8 +39,6 @@
 #include "ns3/internet-module.h"
 #include "ns3/point-to-point-module.h"
 #include "ns3/ipv4-global-routing-helper.h"
-#include "ns3/local-clock.h"
-#include "ns3/perfect-clock-model-impl.h"
 
 using namespace ns3;
 
@@ -77,11 +75,6 @@ int main (int argc, char *argv[])
   //  LogComponentEnable("PacketSink", LOG_LEVEL_ALL);
   //  LogComponentEnable("TcpLargeTransfer", LOG_LEVEL_ALL);
 
-
-  //Set LocalTime Simulator Impl
-  
-  GlobalValue::Bind ("SimulatorImplementationType", 
-                     StringValue ("ns3::LocalTimeSimulatorImpl"));
   CommandLine cmd;
   cmd.Parse (argc, argv);
 
@@ -102,39 +95,6 @@ int main (int argc, char *argv[])
   NodeContainer n1n2;
   n1n2.Add (n0n1.Get (1));
   n1n2.Create (1);
-
-  //Aggregate clock 
-
-  Ptr<PerfectClockModelImpl> clockImpl0 = CreateObject <PerfectClockModelImpl> ();
-  Ptr<PerfectClockModelImpl> clockImpl1 = CreateObject <PerfectClockModelImpl> ();
-  Ptr<PerfectClockModelImpl> clockImpl2 = CreateObject <PerfectClockModelImpl> ();
-
-  clockImpl0 -> SetAttribute ("Frequency", DoubleValue (2));
-  clockImpl1 -> SetAttribute ("Frequency", DoubleValue (3));
-  clockImpl2 -> SetAttribute ("Frequency", DoubleValue (2));
-
-  
-  Ptr<LocalClock> clock0 = CreateObject<LocalClock> ();
-  Ptr<LocalClock> clock1 = CreateObject<LocalClock> ();
-  Ptr<LocalClock> clock2 = CreateObject<LocalClock> ();
-
-
-  clock0 -> SetAttribute ("ClockModelImpl", PointerValue (clockImpl0));
-  clock1 -> SetAttribute ("ClockModelImpl", PointerValue (clockImpl1));
-  clock2 -> SetAttribute ("ClockModelImpl", PointerValue (clockImpl2));
-
-
-  Ptr<Node> n1 = n0n1.Get (0);
-  Ptr<Node> n2 = n0n1.Get (1); 
-  Ptr<Node> n3 = n1n2.Get (1); 
-
-
-  n1 -> AggregateObject (clock0);
-  n2 -> AggregateObject (clock1);
-  n3 -> AggregateObject (clock2);
-
-
-
 
   // We create the channels first without any IP addressing information
   // First make and configure the helper, so that it will put the appropriate
@@ -212,7 +172,7 @@ int main (int argc, char *argv[])
 
   // Finally, set up the simulator to run.  The 1000 second hard limit is a
   // failsafe in case some change above causes the simulation to never end
-  //Simulator::Stop (Seconds (1000));
+  Simulator::Stop (Seconds (1000));
   Simulator::Run ();
   Simulator::Destroy ();
 }

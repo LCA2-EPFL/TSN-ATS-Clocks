@@ -59,7 +59,6 @@ LocalTimeSimulatorImpl::LocalTimeSimulatorImpl()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_DEBUG ("Local Time Simulator implementation created");
-  m_currentContext = Simulator::NO_CONTEXT;
 }
 
 LocalTimeSimulatorImpl::~LocalTimeSimulatorImpl ()
@@ -74,13 +73,19 @@ LocalTimeSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
 
   // Some app schedule events to distroy simulatin with a context of 4294967295. We skip that contet because 
   // it doesn't correspond to any node.
-  if (DefaultSimulatorImpl::GetContext () == 4294967295)
+
+  uint32_t context = DefaultSimulatorImpl::GetContext ();
+  NS_LOG_DEBUG ("context ... " << context);
+
+
+  if ( context == uint32_t(4294967295) )
   {
-    NS_LOG_LOGIC ("The context doens't correspond to a node");
+    NS_LOG_DEBUG ("The context doens't correspond to a node");
   }
   else
   {
-   m_currentContext = DefaultSimulatorImpl::GetContext ();
+    m_currentContext = context;
+    NS_LOG_DEBUG ("Setting up the context ... " << m_currentContext);
   }
   
   NS_LOG_DEBUG ("Schedule event with Context: " << m_currentContext);
