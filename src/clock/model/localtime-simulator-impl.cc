@@ -71,8 +71,19 @@ EventId
 LocalTimeSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
 {
   NS_LOG_INFO (this << delay << event);
-  NS_LOG_DEBUG ("Sheduling events...");
-  m_currentContext = DefaultSimulatorImpl::GetContext ();
+
+  // Some app schedule events to distroy simulatin with a context of 4294967295. We skip that contet because 
+  // it doesn't correspond to any node.
+  if (DefaultSimulatorImpl::GetContext () == 4294967295)
+  {
+    NS_LOG_LOGIC ("The context doens't correspond to a node");
+  }
+  else
+  {
+   m_currentContext = DefaultSimulatorImpl::GetContext ();
+  }
+  
+  NS_LOG_DEBUG ("Schedule event with Context: " << m_currentContext);
   Ptr <Node>  n = NodeList::GetNode (m_currentContext);
   Ptr <LocalClock> clock = n -> GetObject <LocalClock> ();
   Time globalTimeDelay = clock -> LocalToGlobalAbs (delay);
@@ -94,7 +105,7 @@ LocalTimeSimulatorImpl::ScheduleWithContext (uint32_t context, Time const &delay
 {
   NS_LOG_INFO (this << context << delay << event);
   //TODO
-  NS_LOG_DEBUG ("Sheduling events with context.........");
+  NS_LOG_DEBUG ("Sheduling events with context: " << context);
   DefaultSimulatorImpl::ScheduleWithContext (context,delay,event);
 
 }
