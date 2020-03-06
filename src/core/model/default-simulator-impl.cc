@@ -233,7 +233,6 @@ DefaultSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
   
   NS_ASSERT_MSG (SystemThread::Equals (m_main), "Simulator::Schedule Thread-unsafe invocation!");
   Time time = Simulator::Now() + delay ;
-  NS_LOG_DEBUG ("Sheduling events......... at time......" << time );
 
   NS_ASSERT_MSG (delay.IsPositive (), "DefaultSimulatorImpl::Schedule(): Negative delay");
   Time tAbsolute = delay + TimeStep (m_currentTs);
@@ -246,6 +245,9 @@ DefaultSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
   m_uid++;
   m_unscheduledEvents++;
   m_events->Insert (ev);
+
+  NS_LOG_DEBUG ("Sheduling events......... at time...... " << time << "with context: " <<  m_currentContext  );
+
   return EventId (event, ev.key.m_ts, ev.key.m_context, ev.key.m_uid);
 }
 
@@ -253,7 +255,10 @@ void
 DefaultSimulatorImpl::ScheduleWithContext (uint32_t context, Time const &delay, EventImpl *event)
 {
   NS_LOG_FUNCTION (this << context << delay.GetTimeStep () << event);
-  NS_LOG_DEBUG ("Sheduling events......... at time......" << delay << context);
+    
+  Time time = Simulator::Now() + delay ;
+
+  NS_LOG_DEBUG ("Sheduling events......... at time......" << time << "Node: " << context);
 
   if (SystemThread::Equals (m_main))
     {

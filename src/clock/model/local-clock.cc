@@ -89,7 +89,6 @@ void LocalClock::SetClock (Ptr<ClockModelImpl> newClock)
     {
       if (Simulator::IsExpired ((*iter) -> GetEventId()))
       {
-        //Todo: Remove from the list
         m_events.remove ((*iter));
       }
       else
@@ -98,7 +97,6 @@ void LocalClock::SetClock (Ptr<ClockModelImpl> newClock)
         Ptr<ClockModelImpl> oldClock;
         oldClock = m_clock;
         m_clock = newClock;
-        //TODO Is doing a loop??
         LocalClock::ReSchedule ((*iter) -> GetEventId (), oldClock);
         m_events.remove ((*iter));
       }
@@ -145,7 +143,7 @@ void LocalClock::ReSchedule(EventId event, Ptr<ClockModelImpl> oldClock)
   Simulator::Remove (event);
   globalOldDurationRemain = eventTimeStamp - Simulator::Now ();
   
-  NS_ASSERT_MSG (globalOldDurationRemain.GetTimeStep () < 0, "Remaining GlobalTime is negative" << globalOldDurationRemain.GetTimeStep ());
+ // NS_ASSERT_MSG (globalOldDurationRemain.GetTimeStep () < 0, "Remaining GlobalTime is negative" << globalOldDurationRemain.GetTimeStep ());
   
   localOldDurationRemain = oldClock -> GlobalToLocalAbs (globalOldDurationRemain);
 
