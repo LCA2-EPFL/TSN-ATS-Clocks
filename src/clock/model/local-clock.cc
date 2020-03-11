@@ -59,6 +59,7 @@ LocalClock::GetTypeId (void)
 LocalClock::LocalClock ()
 {
   NS_LOG_FUNCTION (this);
+  m_clockUpdate = false;
 }
 
 LocalClock::LocalClock (Ptr<ClockModelImpl> clock)
@@ -66,6 +67,7 @@ LocalClock::LocalClock (Ptr<ClockModelImpl> clock)
   NS_LOG_FUNCTION (this);
   m_clock = clock;
   NS_LOG_DEBUG ("Create Local Clock with contructor");
+  m_clockUpdate = false;
 }
 
 LocalClock::~LocalClock()
@@ -81,6 +83,7 @@ Time LocalClock::GetLocalTime ()
 
 void LocalClock::SetClock (Ptr<ClockModelImpl> newClock)
 {
+    m_clockUpdate = true;
     NS_LOG_FUNCTION (this << newClock);
     NS_LOG_DEBUG ("New Clock");
     Ptr<ClockModelImpl> oldClock;
@@ -148,6 +151,10 @@ void LocalClock::InsertEvent( Ptr<ExtendedEventId> event)
   m_events.push_back (event);
   NS_LOG_DEBUG ("Inserting event in the list: " << event -> GetEventId ().GetUid ());
 }
+bool LocalClock::IsClockUpdating ()
+{
+  return m_clockUpdate;
+}
 
 void LocalClock::ReSchedule(EventId event, Ptr<ClockModelImpl> oldClock, EventImpl *impl)
 {
@@ -165,8 +172,8 @@ void LocalClock::ReSchedule(EventId event, Ptr<ClockModelImpl> oldClock, EventIm
   NS_LOG_DEBUG ("Old Global Time " << globalOldDurationRemain.GetTimeStep () << " to Old Local Time " << localOldDurationRemain.GetTimeStep ());
   NS_LOG_DEBUG ("Event timeStamp : " << event.GetTs ());
   
-  NS_LOG_DEBUG ("Is cancell ? " << impl ->IsCancelled ());
   Simulator::Schedule (localOldDurationRemain, impl);
 }
+
 
 }//namespace ns3

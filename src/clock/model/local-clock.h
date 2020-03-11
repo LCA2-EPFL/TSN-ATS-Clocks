@@ -100,19 +100,26 @@ public:
    * \brief Insert a event in m_events to keep track of the events scheduled by this node.  
    */
   void InsertEvent (Ptr <ExtendedEventId> event);
+  /**
+   * Return true if SetClock function has been called.
+   */
+  bool IsClockUpdating ();
   
 private:
-  //TODO: define ExtendedEventId
-
+  
   /**
    * \brief ReSchedule an Event in the main simulator. 
    */
   void ReSchedule (EventId eventId, Ptr<ClockModelImpl> oldClock, EventImpl *impl);
 
+  
+  /** Flag indicating if clock is updating*/
+  bool m_clockUpdate;
   //Clock implementation for the local clock
   Ptr<ClockModelImpl> m_clock;  
   //List of events schedulled by this node.           
   std::list<Ptr<ExtendedEventId>> m_events;      
+  
 };
 
 }// namespace ns3

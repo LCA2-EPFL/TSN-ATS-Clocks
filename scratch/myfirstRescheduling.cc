@@ -26,7 +26,13 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("FirstScriptExample");
 
-
+void setClock (Ptr<LocalClock> clock, double freq)
+{
+  NS_LOG_DEBUG ("Calling function set clock");
+  Ptr<PerfectClockModelImpl> clockImpl = CreateObject <PerfectClockModelImpl> ();
+  clockImpl -> SetAttribute ("Frequency", DoubleValue (freq));
+  clock -> SetClock (clockImpl);
+}
 int
 main (int argc, char *argv[])
 {
@@ -94,13 +100,18 @@ main (int argc, char *argv[])
 
   UdpEchoClientHelper echoClient (interfaces.GetAddress (1), 9);
   echoClient.SetAttribute ("MaxPackets", UintegerValue (10));
-  echoClient.SetAttribute ("Interval", TimeValue (Seconds (2.0)));
+  echoClient.SetAttribute ("Interval", TimeValue (Seconds (4.0)));
   echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
 
   ApplicationContainer clientApps = echoClient.Install (nodes.Get (0));
   clientApps.Start (Seconds (2.0));
   clientApps.Stop (Seconds (500.0));
 
+  UintegerValue idNode;
+  n1 ->GetAttribute ("Id", idNode);
+  uint32_t num = idNode.Get ();
+  std::cout << "ID\n" << num;  
+  Simulator::ScheduleWithContext (num, Seconds (5.0), &setClock, clock0, 3.0);
   
 
   Simulator::Run ();
