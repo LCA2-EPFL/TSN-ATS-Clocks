@@ -26,10 +26,11 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("FirstScriptExample");
 
-void setClock (Ptr<LocalClock> clock, double freq);
+
 int
 main (int argc, char *argv[])
 {
+
   CommandLine cmd;
   cmd.Parse (argc, argv);
 
@@ -51,7 +52,7 @@ main (int argc, char *argv[])
 
   Ptr<PerfectClockModelImpl> clockImpl0 = CreateObject <PerfectClockModelImpl> ();
   Ptr<PerfectClockModelImpl> clockImpl1 = CreateObject <PerfectClockModelImpl> ();
-  clockImpl0 -> SetAttribute ("Frequency", DoubleValue (1));
+  clockImpl0 -> SetAttribute ("Frequency", DoubleValue (4));
 
   clockImpl1 -> SetAttribute ("Frequency", DoubleValue (1));
 
@@ -68,8 +69,6 @@ main (int argc, char *argv[])
 
   n1 -> AggregateObject (clock0);
   n2 -> AggregateObject (clock1);
-
-
 
 
   PointToPointHelper pointToPoint;
@@ -90,32 +89,21 @@ main (int argc, char *argv[])
   UdpEchoServerHelper echoServer (9);
 
   ApplicationContainer serverApps = echoServer.Install (nodes.Get (1));
-  serverApps.Start (Seconds (1.0));
-  serverApps.Stop (Seconds (200.0));
+  serverApps.Start (Seconds (2.0));
+  serverApps.Stop (Seconds (500.0));
 
   UdpEchoClientHelper echoClient (interfaces.GetAddress (1), 9);
   echoClient.SetAttribute ("MaxPackets", UintegerValue (10));
-  echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
+  echoClient.SetAttribute ("Interval", TimeValue (Seconds (5.0)));
   echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
 
   ApplicationContainer clientApps = echoClient.Install (nodes.Get (0));
   clientApps.Start (Seconds (2.0));
-  clientApps.Stop (Seconds (200.0));
+  clientApps.Stop (Seconds (500.0));
+
   
-  UintegerValue idNode;
-  n1 ->GetAttribute ("Id", idNode);
-  uint32_t num = idNode.Get ();
-  std::cout << "ID\n" << num;  
-  Simulator::ScheduleWithContext (num, Seconds (5.0), &setClock, clock0, 2.0);
+
   Simulator::Run ();
   Simulator::Destroy ();
-  return 0;
 }
 
-void setClock (Ptr<LocalClock> clock, double freq)
-{
-  NS_LOG_DEBUG ("Calling function set clock");
-  Ptr<PerfectClockModelImpl> clockImpl = CreateObject <PerfectClockModelImpl> ();
-  clockImpl -> SetAttribute ("Frequency", DoubleValue (freq));
-  clock -> SetClock (clockImpl);
-}

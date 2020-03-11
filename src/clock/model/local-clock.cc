@@ -77,30 +77,45 @@ Time LocalClock::GetLocalTime ()
 {
   NS_LOG_FUNCTION (this);
   return m_clock->GetLocalTime();
-
 }
 
 void LocalClock::SetClock (Ptr<ClockModelImpl> newClock)
 {
     NS_LOG_FUNCTION (this << newClock);
     NS_LOG_DEBUG ("New Clock");
+    Ptr<ClockModelImpl> oldClock;
+    oldClock = m_clock;
+    m_clock = newClock;
 
-    for (std::list<Ptr<ExtendedEventId>>::const_iterator iter = m_events.begin(), end = m_events.end(); iter != end; ++iter)
+    
+    for (std::list<Ptr<ExtendedEventId>>::const_iterator iter = m_events.begin (); iter != m_events.end ();)
     {
       if (Simulator::IsExpired ((*iter) -> GetEventId()))
       {
-        m_events.remove ((*iter));
+        NS_LOG_DEBUG ("Event expired, remove...eventId : " << (*iter) -> GetEventId ().GetUid ());
+        NS_LOG_DEBUG ("EventTimeStamp: " << TimeStep ((*iter) ->  GetEventId ().GetTs ()) << " Simulator::Now : " << Simulator::Now ());
+        NS_LOG_DEBUG ("Remove");
+        iter = m_events.erase (iter);    
       }
       else
       {
-        NS_LOG_DEBUG ("Rescheduling event");
-        Ptr<ClockModelImpl> oldClock;
-        oldClock = m_clock;
-        m_clock = newClock;
-        LocalClock::ReSchedule ((*iter) -> GetEventId (), oldClock);
-        m_events.remove ((*iter));
+        iter++;
       }
+      
     }
+    std::list<Ptr<ExtendedEventId>> eventListAux (m_events);
+    m_events.clear ();
+
+    for (std::list<Ptr<ExtendedEventId>>::const_iterator iter = eventListAux.begin (); iter != eventListAux.end ();++iter)
+  {
+      NS_LOG_DEBUG ("Rescheduling event eventId : " <<  (*iter) -> GetEventId ().GetUid ());
+      (*iter) -> GetEventId().PeekEventImpl () -> Ref ();
+
+      EventImpl *eventImplPtr = (*iter) -> GetEventId().PeekEventImpl ();
+      Simulator::Cancel ((*iter) -> GetEventId());
+      LocalClock::ReSchedule ((*iter) -> GetEventId (), oldClock, eventImplPtr);
+    }
+    
 }
 
 Time LocalClock::GlobalToLocalTime (Time globalTime)
@@ -127,28 +142,31 @@ Time LocalClock::LocalToGlobalAbs (Time localDelay)
   return m_clock->LocalToGlobalAbs (localDelay);
 }
 
-void LocalClock::InsertEvent( Ptr <ExtendedEventId> event)
+void LocalClock::InsertEvent( Ptr<ExtendedEventId> event)
 {
   NS_LOG_FUNCTION (this << event);
   m_events.push_back (event);
-  NS_LOG_DEBUG ("Inserting event in the list");
+  NS_LOG_DEBUG ("Inserting event in the list: " << event -> GetEventId ().GetUid ());
 }
-void LocalClock::ReSchedule(EventId event, Ptr<ClockModelImpl> oldClock)
+
+void LocalClock::ReSchedule(EventId event, Ptr<ClockModelImpl> oldClock, EventImpl *impl)
 {
   Time globalOldDurationRemain;
   Time eventTimeStamp;
   Time localOldDurationRemain;
 
   eventTimeStamp = TimeStep (event.GetTs ());
-  Simulator::Remove (event);
   globalOldDurationRemain = eventTimeStamp - Simulator::Now ();
   
- // NS_ASSERT_MSG (globalOldDurationRemain.GetTimeStep () < 0, "Remaining GlobalTime is negative" << globalOldDurationRemain.GetTimeStep ());
+  NS_LOG_DEBUG ("eventTimeStamp: " << eventTimeStamp << " Simulator::Now : " << Simulator::Now () << " GlobalOldDurationRemain: " << globalOldDurationRemain);
   
   localOldDurationRemain = oldClock -> GlobalToLocalAbs (globalOldDurationRemain);
 
-  NS_LOG_DEBUG ("Old Global Time" << globalOldDurationRemain.GetTimeStep () << "to Old Local Time" << localOldDurationRemain.GetTimeStep ());
+  NS_LOG_DEBUG ("Old Global Time " << globalOldDurationRemain.GetTimeStep () << " to Old Local Time " << localOldDurationRemain.GetTimeStep ());
+  NS_LOG_DEBUG ("Event timeStamp : " << event.GetTs ());
   
-  Simulator::Schedule (localOldDurationRemain, event.PeekEventImpl());
+  NS_LOG_DEBUG ("Is cancell ? " << impl ->IsCancelled ());
+  Simulator::Schedule (localOldDurationRemain, impl);
 }
+
 }//namespace ns3

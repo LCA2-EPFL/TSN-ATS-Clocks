@@ -107,7 +107,7 @@ private:
   /**
    * \brief ReSchedule an Event in the main simulator. 
    */
-  void ReSchedule (EventId eventId, Ptr<ClockModelImpl> oldClock);
+  void ReSchedule (EventId eventId, Ptr<ClockModelImpl> oldClock, EventImpl *impl);
 
   //Clock implementation for the local clock
   Ptr<ClockModelImpl> m_clock;  

@@ -75,12 +75,10 @@ LocalTimeSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
   // it doesn't correspond to any node.
 
   uint32_t context = DefaultSimulatorImpl::GetContext ();
-  NS_LOG_DEBUG ("context ... " << context);
-
 
   if ( context == uint32_t(4294967295) )
   {
-    NS_LOG_DEBUG ("The context doens't correspond to a node");
+    NS_LOG_DEBUG ("The context doens't correspond to a node -> Application stop event");
   }
   else
   {
@@ -88,16 +86,20 @@ LocalTimeSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
     NS_LOG_DEBUG ("Setting up the context ... " << m_currentContext);
   }
   
-  NS_LOG_DEBUG ("Schedule event with Context: " << m_currentContext);
   Ptr <Node>  n = NodeList::GetNode (m_currentContext);
   Ptr <LocalClock> clock = n -> GetObject <LocalClock> ();
   Time globalTimeDelay = clock -> LocalToGlobalAbs (delay);
+
   EventId eventId = DefaultSimulatorImpl::Schedule (globalTimeDelay, event);
 
-  Ptr <ExtendedEventId> extendedEventId = CreateObject <ExtendedEventId> ();
+  Ptr <ExtendedEventId> extendedEventId = CreateObject <ExtendedEventId> (eventId.PeekEventImpl (), eventId.GetTs (),
+  eventId.GetContext (), eventId.GetUid ());
 
-  extendedEventId -> SetEventId (eventId);
-  Time localTimeStamp = clock -> LocalToGlobalTime (TimeStep (eventId.GetTs ()));
+
+
+  //extendedEventId -> SetEventId (eventId);
+  Time localTimeStamp = Simulator::Now () + delay;
+  NS_LOG_DEBUG ("Inserting event with localTimeStamp: " << localTimeStamp);
   extendedEventId -> SetLocalTimeStamp (localTimeStamp.GetTimeStep ());
 
   clock -> InsertEvent (extendedEventId);
@@ -110,7 +112,6 @@ LocalTimeSimulatorImpl::ScheduleWithContext (uint32_t context, Time const &delay
 {
   NS_LOG_INFO (this << context << delay << event);
   //TODO
-  NS_LOG_DEBUG ("Sheduling events with context: " << context);
   DefaultSimulatorImpl::ScheduleWithContext (context,delay,event);
 
 }

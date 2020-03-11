@@ -17,6 +17,7 @@
  *
  * 
  */
+
 #ifndef EXTENDED_EVENT_ID_H
 #define EXTENDED_EVENT_ID_H
 
@@ -29,7 +30,8 @@
  */
 
 namespace ns3 {
-class EventId; 
+class EventId;
+class EventImpl; 
 
 /**
  * \ingroup events
@@ -42,23 +44,27 @@ class EventId;
 class ExtendedEventId : public Object
 {
 public:
-static TypeId GetTypeId (void);
+  static TypeId GetTypeId (void);
 
-ExtendedEventId ();
-~ExtendedEventId ();
+  ExtendedEventId ();
+  ExtendedEventId (const Ptr<EventImpl> &impl, uint64_t ts, uint32_t context, uint32_t uid);
 
-EventId GetEventId ();
-uint64_t GetLocalTimeStamp ();
+  ~ExtendedEventId ();
 
-void SetEventId (EventId event);
-void SetLocalTimeStamp (uint64_t timeStamp);
+  EventId GetEventId ();
+  uint64_t GetLocalTimeStamp ();
+
+  void SetEventId (EventId event);
+  void SetLocalTimeStamp (uint64_t timeStamp);
 private:
-//Event ID
-EventId m_eventId;
-//Local Time Stamp asociated to the event
-uint64_t m_localTimeStamp;
+  //Event ID
+  EventId m_eventId;
+  //Local Time Stamp asociated to the event
+  uint64_t m_localTimeStamp;
+
 };
 
 
 }//namespace ns3
+
 #endif /* EXTENDED_EVENT_ID_H */

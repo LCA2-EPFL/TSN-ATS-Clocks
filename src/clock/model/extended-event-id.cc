@@ -46,6 +46,10 @@ ExtendedEventId::ExtendedEventId ()
 {  
   NS_LOG_FUNCTION (this);
 }
+ExtendedEventId::ExtendedEventId (const Ptr<EventImpl> &impl, uint64_t ts, uint32_t context, uint32_t uid)
+{
+  m_eventId = EventId (impl,ts,context,uid); 
+}
 
 ExtendedEventId::~ExtendedEventId ()
 {
@@ -67,9 +71,8 @@ ExtendedEventId::GetLocalTimeStamp ()
 void
 ExtendedEventId::SetEventId (EventId event)
 {
-  m_eventId = event;
+   //EventId (event.PeekEventImpl (), event.GetTs (), event.GetContext (), event.GetUid ());
 }
-
 void
 ExtendedEventId::SetLocalTimeStamp (uint64_t timeStamp)
 {
