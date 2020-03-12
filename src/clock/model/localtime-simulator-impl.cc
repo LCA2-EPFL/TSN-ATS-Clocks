@@ -146,6 +146,7 @@ LocalTimeSimulatorImpl::ProcessOneEvent (void)
   {
     if (it -> GetUid () == next.key.m_uid)
     {
+      m_unscheduledEvents--;
       NS_LOG_DEBUG ("The event that want to be invoke is been canceled: " << next.key.m_uid);
       if (it ->IsExpired ())
       {
@@ -239,7 +240,7 @@ LocalTimeSimulatorImpl::Run (void)
     {
       ProcessOneEvent ();
     }
-  NS_LOG_DEBUG ("Finish, no more events and m_stop: " << m_stop);
+  NS_LOG_DEBUG ("Finish");
   // If the simulator stopped naturally by lack of events, make a
   // consistency test to check that we didn't lose any events along the way.
   NS_ASSERT (!m_events->IsEmpty () || m_unscheduledEvents == 0);
@@ -426,20 +427,22 @@ void
 LocalTimeSimulatorImpl::Cancel (const EventId &id)
 {
   NS_LOG_FUNCTION (this);
-  
-  Ptr <Node>  n = NodeList::GetNode (m_currentContext);
-  Ptr <LocalClock> clock = n -> GetObject <LocalClock> ();
+  if (!IsExpired (id))
+    {
+      id.PeekEventImpl ()->Cancel ();
+    }
+}
 
-  if (!clock -> IsClockUpdating () && !IsExpired (id))
-  {
-    NS_LOG_DEBUG ("Cancelling event implementation " << id.GetUid ());
-    id.PeekEventImpl () -> Cancel ();
-  }
-  else if (!IsExpired (id))
-  {
-    NS_LOG_DEBUG ("pushing reschedulling events on the list");
-    m_eventCancelation.push_back (id);
-  }
+void
+LocalTimeSimulatorImpl::CancelRescheduling (const EventId &id)
+{
+  NS_LOG_FUNCTION (this);
+  NS_LOG_DEBUG ("pushing Reschedulling Cancel events on the list");
+  NS_LOG_DEBUG ("Event to cancelll:  " << id.GetUid ());
+  if (!IsExpired (id))
+    {
+      m_eventCancelation.push_back (id);    
+    }
 }
 
 bool

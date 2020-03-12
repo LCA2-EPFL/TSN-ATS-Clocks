@@ -58,7 +58,8 @@ main (int argc, char *argv[])
 
   Ptr<PerfectClockModelImpl> clockImpl0 = CreateObject <PerfectClockModelImpl> ();
   Ptr<PerfectClockModelImpl> clockImpl1 = CreateObject <PerfectClockModelImpl> ();
-  clockImpl0 -> SetAttribute ("Frequency", DoubleValue (1));
+  clockImpl0 -> SetAttribute ("Frequency", DoubleValue (1
+  ));
 
   clockImpl1 -> SetAttribute ("Frequency", DoubleValue (1));
 
@@ -100,7 +101,7 @@ main (int argc, char *argv[])
 
   UdpEchoClientHelper echoClient (interfaces.GetAddress (1), 9);
   echoClient.SetAttribute ("MaxPackets", UintegerValue (10));
-  echoClient.SetAttribute ("Interval", TimeValue (Seconds (4.0)));
+  echoClient.SetAttribute ("Interval", TimeValue (Seconds (5.0)));
   echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
 
   ApplicationContainer clientApps = echoClient.Install (nodes.Get (0));
@@ -111,7 +112,7 @@ main (int argc, char *argv[])
   n1 ->GetAttribute ("Id", idNode);
   uint32_t num = idNode.Get ();
   std::cout << "ID\n" << num;  
-  Simulator::ScheduleWithContext (num, Seconds (5.0), &setClock, clock0, 3.0);
+  Simulator::ScheduleWithContext (num, Seconds (9.0), &setClock, clock0, 3.0);
   
 
   Simulator::Run ();

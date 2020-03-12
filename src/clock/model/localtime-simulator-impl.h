@@ -41,7 +41,7 @@ namespace ns3{
  * when function Schedule and SchedulewithContext are called.
  */
 
-class LocalTimeSimulatorImpl : public DefaultSimulatorImpl
+class LocalTimeSimulatorImpl : public SimulatorImpl
 {
 public:
   /**
@@ -75,6 +75,7 @@ public:
     virtual uint64_t GetEventCount (void) const;
 
     virtual void DoDispose (void);
+    void CancelRescheduling (const EventId &id);
 
 
   /**

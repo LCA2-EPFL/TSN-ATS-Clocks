@@ -26,14 +26,13 @@
 #include "ns3/log.h"
 #include "ns3/simulator.h"
 #include "ns3/pointer.h"
-
-
-
+#include "ns3/localtime-simulator-impl.h"
 
 /**
  * \file clock
  * ns3::LocalClock implementation 
  */
+
 namespace ns3{ 
 
 NS_LOG_COMPONENT_DEFINE ("LocalClock");
@@ -59,7 +58,6 @@ LocalClock::GetTypeId (void)
 LocalClock::LocalClock ()
 {
   NS_LOG_FUNCTION (this);
-  m_clockUpdate = false;
 }
 
 LocalClock::LocalClock (Ptr<ClockModelImpl> clock)
@@ -67,7 +65,6 @@ LocalClock::LocalClock (Ptr<ClockModelImpl> clock)
   NS_LOG_FUNCTION (this);
   m_clock = clock;
   NS_LOG_DEBUG ("Create Local Clock with contructor");
-  m_clockUpdate = false;
 }
 
 LocalClock::~LocalClock()
@@ -83,7 +80,6 @@ Time LocalClock::GetLocalTime ()
 
 void LocalClock::SetClock (Ptr<ClockModelImpl> newClock)
 {
-    m_clockUpdate = true;
     NS_LOG_FUNCTION (this << newClock);
     NS_LOG_DEBUG ("New Clock");
     Ptr<ClockModelImpl> oldClock;
@@ -104,7 +100,6 @@ void LocalClock::SetClock (Ptr<ClockModelImpl> newClock)
       {
         iter++;
       }
-      
     }
     std::list<Ptr<ExtendedEventId>> eventListAux (m_events);
     m_events.clear ();
@@ -112,11 +107,20 @@ void LocalClock::SetClock (Ptr<ClockModelImpl> newClock)
     for (std::list<Ptr<ExtendedEventId>>::const_iterator iter = eventListAux.begin (); iter != eventListAux.end ();++iter)
   {
       NS_LOG_DEBUG ("Rescheduling event eventId : " <<  (*iter) -> GetEventId ().GetUid ());
-      (*iter) -> GetEventId().PeekEventImpl () -> Ref ();
+      EventId eventId = (*iter) -> GetEventId ();
 
-      EventImpl *eventImplPtr = (*iter) -> GetEventId().PeekEventImpl ();
-      Simulator::Cancel ((*iter) -> GetEventId());
-      LocalClock::ReSchedule ((*iter) -> GetEventId (), oldClock, eventImplPtr);
+      Ptr<SimulatorImpl> simImpl = Simulator::GetImplementation ();
+      Ptr<LocalTimeSimulatorImpl> mysimImpl= DynamicCast<LocalTimeSimulatorImpl> (simImpl);
+
+      
+      mysimImpl -> CancelRescheduling (eventId);
+
+      if(mysimImpl == nullptr)
+      {
+        NS_LOG_WARN ("NOT USING THE CORRECT SIMULATOR IMPLEMENTATION");
+      }
+
+      LocalClock::ReSchedule (eventId, oldClock, (*iter) -> GetEventId().PeekEventImpl ());
     }
     
 }
@@ -151,10 +155,8 @@ void LocalClock::InsertEvent( Ptr<ExtendedEventId> event)
   m_events.push_back (event);
   NS_LOG_DEBUG ("Inserting event in the list: " << event -> GetEventId ().GetUid ());
 }
-bool LocalClock::IsClockUpdating ()
-{
-  return m_clockUpdate;
-}
+
+
 
 void LocalClock::ReSchedule(EventId event, Ptr<ClockModelImpl> oldClock, EventImpl *impl)
 {

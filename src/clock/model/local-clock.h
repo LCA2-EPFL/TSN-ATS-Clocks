@@ -103,7 +103,6 @@ public:
   /**
    * Return true if SetClock function has been called.
    */
-  bool IsClockUpdating ();
   
 private:
   
@@ -112,9 +111,6 @@ private:
    */
   void ReSchedule (EventId eventId, Ptr<ClockModelImpl> oldClock, EventImpl *impl);
 
-  
-  /** Flag indicating if clock is updating*/
-  bool m_clockUpdate;
   //Clock implementation for the local clock
   Ptr<ClockModelImpl> m_clock;  
   //List of events schedulled by this node.           

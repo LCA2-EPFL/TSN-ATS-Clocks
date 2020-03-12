@@ -52,7 +52,7 @@ main (int argc, char *argv[])
 
   Ptr<PerfectClockModelImpl> clockImpl0 = CreateObject <PerfectClockModelImpl> ();
   Ptr<PerfectClockModelImpl> clockImpl1 = CreateObject <PerfectClockModelImpl> ();
-  clockImpl0 -> SetAttribute ("Frequency", DoubleValue (1));
+  clockImpl0 -> SetAttribute ("Frequency", DoubleValue (2));
 
   clockImpl1 -> SetAttribute ("Frequency", DoubleValue (1));
 
