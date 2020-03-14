@@ -27,7 +27,7 @@
 #include "pointer.h"
 #include "assert.h"
 #include "log.h"
-#include "ns3/localtime-simulator-impl.h"
+
 #include <cmath>
 
 
@@ -138,9 +138,8 @@ DefaultSimulatorImpl::GetSystemId (void) const
 void
 DefaultSimulatorImpl::ProcessOneEvent (void)
 {
-  
   Scheduler::Event next = m_events->RemoveNext ();
-  NS_LOG_DEBUG ("processing event: " << next.key.m_uid << " at time: " << next.key.m_ts);
+
   NS_ASSERT (next.key.m_ts >= m_currentTs);
   m_unscheduledEvents--;
   m_eventCount++;
@@ -151,10 +150,6 @@ DefaultSimulatorImpl::ProcessOneEvent (void)
   m_currentUid = next.key.m_uid;
   next.impl->Invoke ();
   next.impl->Unref ();
-  NS_LOG_DEBUG ("processing event: " << next.key.m_uid << " at time: " << next.key.m_ts);
-
-  
-
 
   ProcessEventsWithContext ();
 }
@@ -208,7 +203,7 @@ DefaultSimulatorImpl::Run (void)
     {
       ProcessOneEvent ();
     }
-  NS_LOG_DEBUG ("Finish, no more events and m_stop: " << m_stop);
+
   // If the simulator stopped naturally by lack of events, make a
   // consistency test to check that we didn't lose any events along the way.
   NS_ASSERT (!m_events->IsEmpty () || m_unscheduledEvents == 0);
@@ -235,9 +230,7 @@ EventId
 DefaultSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
 {
   NS_LOG_FUNCTION (this << delay.GetTimeStep () << event);
-  
   NS_ASSERT_MSG (SystemThread::Equals (m_main), "Simulator::Schedule Thread-unsafe invocation!");
-  Time time = Simulator::Now() + delay ;
 
   NS_ASSERT_MSG (delay.IsPositive (), "DefaultSimulatorImpl::Schedule(): Negative delay");
   Time tAbsolute = delay + TimeStep (m_currentTs);
@@ -250,9 +243,6 @@ DefaultSimulatorImpl::Schedule (Time const &delay, EventImpl *event)
   m_uid++;
   m_unscheduledEvents++;
   m_events->Insert (ev);
-  NS_LOG_DEBUG ("Current time: " << TimeStep (m_currentTs));
-  NS_LOG_DEBUG ("Sheduling event: " << ev.key.m_uid << "......... at time...... " << tAbsolute << " with context: " <<  m_currentContext  );
-
   return EventId (event, ev.key.m_ts, ev.key.m_context, ev.key.m_uid);
 }
 
@@ -260,10 +250,6 @@ void
 DefaultSimulatorImpl::ScheduleWithContext (uint32_t context, Time const &delay, EventImpl *event)
 {
   NS_LOG_FUNCTION (this << context << delay.GetTimeStep () << event);
-    
-  Time time = Simulator::Now() + delay ;
-
-  NS_LOG_DEBUG ("Sheduling events......... at time......" << time << " Node: " << context);
 
   if (SystemThread::Equals (m_main))
     {
@@ -370,7 +356,6 @@ DefaultSimulatorImpl::Remove (const EventId &id)
   event.impl->Unref ();
 
   m_unscheduledEvents--;
-  NS_LOG_DEBUG ("Event Remove from the main simulator");
 }
 
 void
