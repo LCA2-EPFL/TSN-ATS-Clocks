@@ -79,9 +79,9 @@ public:
   virtual uint32_t GetContext (void) const;
   virtual uint64_t GetEventCount (void) const;
 
+private:
   virtual void DoDispose (void);
 
-private:
   /** Process the next event. */
   void ProcessOneEvent (void);
   /** Move events from a different context into the main event queue. */
