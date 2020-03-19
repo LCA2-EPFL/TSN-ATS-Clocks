@@ -54,75 +54,62 @@ PerfectClockModelImpl::PerfectClockModelImpl ()
   m_timeUpdates.first = Simulator::Now();
   m_timeUpdates.second = Simulator::Now();
   m_frequency = 2;
-  NS_LOG_DEBUG ("Perfect Clock Created with double freq");
 }
-
 
 PerfectClockModelImpl::~PerfectClockModelImpl ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-Time PerfectClockModelImpl::GetLocalTime ()
+Time 
+PerfectClockModelImpl::GetLocalTime ()
 {
   NS_LOG_FUNCTION (this);
-  Time time;
   Time localDuration;
   Time globalDuration = Simulator::Now () - std::get<1>(m_timeUpdates);
-  
-  NS_ASSERT_MSG (globalDuration < 0, "Global Duration" << globalDuration << "negative. Cannot calculate LocalTime");
-
   localDuration = GlobalToLocalAbs (globalDuration);
-  time = localDuration + std::get<0>(m_timeUpdates);
-  NS_LOG_DEBUG("Local Time: " << time);
-  return time;
+  return localDuration;
 }
 
-Time PerfectClockModelImpl::GlobalToLocalTime (Time globalTime)
+Time 
+PerfectClockModelImpl::GlobalToLocalTime (Time globalTime)
 {
   NS_LOG_FUNCTION(this << globalTime);
   Time localDuration;
   Time localTime;
-  Time globalDuration = globalTime - std::get<1>(m_timeUpdates);
-
-  NS_ASSERT_MSG (globalDuration < 0, "Global Duration" << globalDuration << "negative. Cannot calculate GlobalToLocalTime");
-  
+  Time globalDuration = globalTime - std::get<1>(m_timeUpdates);  
   localDuration = GlobalToLocalAbs (globalDuration);
   localTime = std::get<0>(m_timeUpdates) + localDuration;
-  NS_LOG_DEBUG("Local Time: " << localTime <<" From Global Time: "<< globalTime);
   return localTime;
 }
 
-Time PerfectClockModelImpl::LocalToGlobalTime (Time localTime)
+Time 
+PerfectClockModelImpl::LocalToGlobalTime (Time localTime)
 {
   NS_LOG_FUNCTION (this << localTime);
   Time globalTime;
   Time globalDuration;
   Time localDuration = localTime - std::get<0>(m_timeUpdates);
-  
-  //NS_ASSERT_MSG (localDuration < -1, "Local Duration:" << localDuration << "negative. Cannot calculate LocalToGlobalTime");
-
   globalDuration = LocalToGlobalAbs (localDuration);
   globalTime = globalDuration + std::get<1>(m_timeUpdates);
-  NS_LOG_DEBUG ( "Global Time:" << globalTime << "From Local Time: " << localTime);
   return globalTime;
 }
 
-Time PerfectClockModelImpl::GlobalToLocalAbs (Time globaldDelay)
+Time 
+PerfectClockModelImpl::GlobalToLocalAbs (Time globaldDelay)
 {
   NS_LOG_FUNCTION (this << globaldDelay); 
   Time localDelay;
   localDelay = Time::FromDouble (globaldDelay.GetTimeStep () / (m_frequency),Time::NS);
-  NS_LOG_DEBUG ("Local Delay: " << localDelay << "From Global Delay: " << globaldDelay);
   return localDelay;
 }
 
-Time PerfectClockModelImpl::LocalToGlobalAbs (Time localDelay)
+Time 
+PerfectClockModelImpl::LocalToGlobalAbs (Time localDelay)
 {
   NS_LOG_FUNCTION (this << localDelay);
   Time globalDelay;
   globalDelay = Time::FromDouble (localDelay.GetTimeStep () * m_frequency, Time::NS);
-  NS_LOG_DEBUG ("Global Delay: " << globalDelay << "From Local Delay: " << localDelay);
   return globalDelay;
 }
 }

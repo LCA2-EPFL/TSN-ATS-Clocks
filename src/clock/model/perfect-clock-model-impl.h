@@ -17,7 +17,6 @@
  *
  * Author: Guillermo Aguirre 
  */
-// TODO Logging 
 #ifndef PERFECT_CLOCK_MODEL_IMPL_H
 #define PERFECT_CLOCK_MODEL_IMPL_H
 
@@ -39,8 +38,6 @@ public:
 
   PerfectClockModelImpl ();
   ~PerfectClockModelImpl ();
-
-  //Inherit
 
   Time GetLocalTime ();
   Time GlobalToLocalTime (Time globalTime);

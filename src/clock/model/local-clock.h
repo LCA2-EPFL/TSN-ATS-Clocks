@@ -64,9 +64,11 @@ public:
   ~LocalClock ();
 
   /**
-   * Return a local time that corresponds to node own clock, different
+   * \brief Return a local time that corresponds to node own clock, different
    * from Simulator::Now().
+   * \return Node time
    */
+
   Time GetLocalTime ();
   /**
    * \brief associate a clock model implementation to the clock of the node.
@@ -79,25 +81,34 @@ public:
 
   /**
    * \brief Transform Time from Global (simulator time) to Local(Local Node Time).
+   * \param globalTime time  
+   * \return Local Time  
    */
   Time GlobalToLocalTime (Time globalTime);
   
   /**
    * \brief Transform Time from Local (Local Node Time) to Global (simulator time).
+   * \param localTime time
+   * \return Global Time  
    */
   Time LocalToGlobalTime (Time localTime);
 
    /**
    * \brief Transform absolute Time from Global (simulator time) to Local (Local Node Time).
+   * \param globalDelay time
+   * \return  Local Absolute Time  
    */
   Time GlobalToLocalAbs (Time globalDelay);
   /**
    * \brief Transform absolute Time from Local (Local Node Time) to Global (simulator time).
+   * \param localDelay time
+   * \return Global Absolute Time  
    */
   Time LocalToGlobalAbs (Time localDelay);
   
   /**
    * \brief Insert a event in m_events to keep track of the events scheduled by this node.  
+   * \param event Pointer to the extended eventId to be inserted
    */
   void InsertEvent (Ptr <ExtendedEventId> event);
   /**
@@ -107,9 +118,13 @@ public:
 private:
   
   /**
-   * \brief ReSchedule an Event in the main simulator. 
+   * \brief ReSchedule an Event in the main simulator. This function calculate the remaining 
+   * time for the event to be executed and reschedule the event with the new delay updated to 
+   * the new clock.
+   * \param stamp globaltime of the vent to be rechedule
+   * \param impl 
    */
-  void ReSchedule (EventId eventId, Ptr<ClockModelImpl> oldClock, EventImpl *impl);
+  void ReSchedule (Time globalTimeStamp, EventImpl *impl);
 
   //Clock implementation for the local clock
   Ptr<ClockModelImpl> m_clock;  

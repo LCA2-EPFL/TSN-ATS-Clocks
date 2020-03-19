@@ -46,9 +46,9 @@ ExtendedEventId::ExtendedEventId ()
 {  
   NS_LOG_FUNCTION (this);
 }
-ExtendedEventId::ExtendedEventId (const Ptr<EventImpl> &impl, uint64_t ts, uint32_t context, uint32_t uid)
+ExtendedEventId::ExtendedEventId (EventId event)
 {
-  m_eventId = EventId (impl,ts,context,uid); 
+  m_eventId = EventId (event.PeekEventImpl (), event.GetTs (),event.GetContext (), event.GetUid ()); 
 }
 
 ExtendedEventId::~ExtendedEventId ()

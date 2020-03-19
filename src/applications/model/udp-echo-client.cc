@@ -306,8 +306,8 @@ void
 UdpEchoClient::Send (void)
 {
   NS_LOG_FUNCTION (this);
-
-  NS_ASSERT (m_sendEvent.IsExpired ());
+  NS_LOG_DEBUG ("Simulation time " << Simulator::Now () << "and event time: " << m_sendEvent.GetTs ());
+  NS_ASSERT (m_sendEvent.IsExpired());
 
   Ptr<Packet> p;
   if (m_dataSize)

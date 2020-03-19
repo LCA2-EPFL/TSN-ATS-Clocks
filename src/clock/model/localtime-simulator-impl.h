@@ -75,6 +75,9 @@ public:
     virtual uint64_t GetEventCount (void) const;
 
     virtual void DoDispose (void);
+
+    /**
+     */
     void CancelRescheduling (const EventId &id);
 
 
@@ -95,11 +98,15 @@ public:
 private:
 
   /** \brief Process the next event. Check if the event to invoke is one of the events that is been 
-   * canceled by the rescheduling function. We  don't invoke those events.
+   * canceled by the clock update function. We  don't invoke those events. This is done in order to maintain the event implementation. 
    */
   void ProcessOneEvent (void);
   /** Move events from a different context into the main event queue. */
   void ProcessEventsWithContext (void);
+  /** Function that insert and event in the scheduler */
+  Scheduler::Event InsertScheduler (EventImpl *impl, Time tAbsolute);
+  /** Calculate absoulte time*/
+  Time CalculateAbsoluteTime (Time delay);
  
   /** Wrap an event with its execution context. */
   struct EventWithContext {

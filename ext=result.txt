@@ -1,0 +1,9 @@
+FAIL: Test Suite "node-scheduling" (0.000)
+FAIL: Test Suite "Check that basic event handling is working with ns3::ListScheduler" (0.000)
+    Details:
+      Message:   Wrong rescheduling time
+      Condition: newTime (actual) == Simulator::Now () (limit)
+      Actual:    +13000000000.0ns
+      Limit:     +21000000000.0ns
+      File:      ../src/clock/test/node-schedule-test.cc
+      Line:      90

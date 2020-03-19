@@ -44,10 +44,22 @@ class EventImpl;
 class ExtendedEventId : public Object
 {
 public:
+   /**
+   * \brief Get the type ID.
+   * \return the object TypeId
+   */
   static TypeId GetTypeId (void);
 
+  /**
+   * \brief Default contructor
+   */
   ExtendedEventId ();
-  ExtendedEventId (const Ptr<EventImpl> &impl, uint64_t ts, uint32_t context, uint32_t uid);
+
+  /**
+   * \brief Contructor
+   * \param Event EventId of the extendedEventId
+   */
+  ExtendedEventId (EventId event);
 
   ~ExtendedEventId ();
 
@@ -56,6 +68,7 @@ public:
 
   void SetEventId (EventId event);
   void SetLocalTimeStamp (uint64_t timeStamp);
+
 private:
   //Event ID
   EventId m_eventId;

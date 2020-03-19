@@ -17,9 +17,9 @@ def build(bld):
         'helper/clock-helper.cc',
         ]
 
-    module_test = bld.create_ns3_module_test_library('clock')
+    module_test = bld.create_ns3_module_test_library('clock',)
     module_test.source = [
-        'test/clock-test-suite.cc',
+        'test/node-schedule-test.cc',
         ]
 
     headers = bld(features='ns3header')
