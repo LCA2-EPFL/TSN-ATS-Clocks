@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 
 // Include a header file from your module to test.
-#include "ns3/ats.h"
+#include "ns3/ats-bridge.h"
 
 // An essential include is test.h
 #include "ns3/test.h"
@@ -11,25 +11,25 @@
 using namespace ns3;
 
 // This is an example TestCase.
-class AtsTestCase1 : public TestCase
+class AtsBridgeTestCase1 : public TestCase
 {
 public:
-  AtsTestCase1 ();
-  virtual ~AtsTestCase1 ();
+  AtsBridgeTestCase1 ();
+  virtual ~AtsBridgeTestCase1 ();
 
 private:
   virtual void DoRun (void);
 };
 
 // Add some help text to this case to describe what it is intended to test
-AtsTestCase1::AtsTestCase1 ()
-  : TestCase ("Ats test case (does nothing)")
+AtsBridgeTestCase1::AtsBridgeTestCase1 ()
+  : TestCase ("AtsBridge test case (does nothing)")
 {
 }
 
 // This destructor does nothing but we include it as a reminder that
 // the test case should clean up after itself
-AtsTestCase1::~AtsTestCase1 ()
+AtsBridgeTestCase1::~AtsBridgeTestCase1 ()
 {
 }
 
@@ -38,7 +38,7 @@ AtsTestCase1::~AtsTestCase1 ()
 // TestCase must implement
 //
 void
-AtsTestCase1::DoRun (void)
+AtsBridgeTestCase1::DoRun (void)
 {
   // A wide variety of test macros are available in src/core/test.h
   NS_TEST_ASSERT_MSG_EQ (true, true, "true doesn't equal true for some reason");
@@ -50,19 +50,19 @@ AtsTestCase1::DoRun (void)
 // and enables the TestCases to be run.  Typically, only the constructor for
 // this class must be defined
 //
-class AtsTestSuite : public TestSuite
+class AtsBridgeTestSuite : public TestSuite
 {
 public:
-  AtsTestSuite ();
+  AtsBridgeTestSuite ();
 };
 
-AtsTestSuite::AtsTestSuite ()
-  : TestSuite ("ats", UNIT)
+AtsBridgeTestSuite::AtsBridgeTestSuite ()
+  : TestSuite ("ats-bridge", UNIT)
 {
   // TestDuration for TestCase can be QUICK, EXTENSIVE or TAKES_FOREVER
-  AddTestCase (new AtsTestCase1, TestCase::QUICK);
+  AddTestCase (new AtsBridgeTestCase1, TestCase::QUICK);
 }
 
 // Do not forget to allocate an instance of this TestSuite
-static AtsTestSuite atsTestSuite;
+static AtsBridgeTestSuite atsBridgeTestSuite;
 

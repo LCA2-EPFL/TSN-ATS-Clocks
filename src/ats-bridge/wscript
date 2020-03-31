@@ -7,22 +7,22 @@
 #     conf.check_nonfatal(header_name='stdint.h', define_name='HAVE_STDINT_H')
 
 def build(bld):
-    module = bld.create_ns3_module('ats', ['core'])
+    module = bld.create_ns3_module('ats-bridge', ['core'])
     module.source = [
-        'model/ats.cc',
-        'helper/ats-helper.cc',
+        'model/ats-bridge.cc',
+        'helper/ats-bridge-helper.cc',
         ]
 
-    module_test = bld.create_ns3_module_test_library('ats')
+    module_test = bld.create_ns3_module_test_library('ats-bridge')
     module_test.source = [
-        'test/ats-test-suite.cc',
+        'test/ats-bridge-test-suite.cc',
         ]
 
     headers = bld(features='ns3header')
-    headers.module = 'ats'
+    headers.module = 'ats-bridge'
     headers.source = [
-        'model/ats.h',
-        'helper/ats-helper.h',
+        'model/ats-bridge.h',
+        'helper/ats-bridge-helper.h',
         ]
 
     if bld.env.ENABLE_EXAMPLES:
