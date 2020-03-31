@@ -119,7 +119,7 @@ namespace ns3 {
        * 
        * \param offset 
        */
-      void SetClockOffsetVarition (uint32_t offset);
+      void SetClockOffsetVaritionMax (uint32_t offset);
 
       /**
        * \brief Set ATSScheduler clock rate deviation max
@@ -148,12 +148,6 @@ namespace ns3 {
        * \param processDelaymin
        */
       void SetProcessingDelayMin (uint32_t processDelaymin);
-
-    protected:
-      /**
-       * \brief Dispose of the object
-       */
-      virtual void DoDispose (void);
 
     private:
 
