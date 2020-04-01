@@ -20,6 +20,7 @@
 #include "ats-scheduler-queue-disc.h"
 #include "ns3/log.h"
 #include "ns3/simulator.h"
+#include "ats-scheduler-group.h"
 
 namespace ns3{
 
@@ -188,8 +189,15 @@ bool
 ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 {
   NS_LOG_FUNCTION (this << item);
+  //Set group parameters
 
- //implementetation of the Tocken Bucket shaper state machine
+  Time maxResidenceTime;
+  Time groupElibilityTime;
+
+  ATSSchedulerGroup group = this->GetObject<ATSSchedulerGroup>;
+  maxResidenceTime = group.GetMaxResidenceTime (m_SchedulerGroupId);
+  groupElibilityTime = group.GetGroupElibilityTime (m_SchedulerGroupId);
+  //implementetation of the Tocken Bucket shaper state machine
 
   Time lenthRecoveryDuration = item->GetPacket.GetSize / m_informationRate;
   NS_LOG_LOGIC ("LenthRecoveryDuration " << lenthRecoveryDuration);
@@ -199,15 +207,13 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   NS_LOG_LOGIC ("Scheduler Eligibility Time " << schedulerEleigibilityTime);
   Time bucketFullTime = m_bucketEmptyTime + emptyToFullDuration;
   NS_LOG_LOGIC ("Bucket Full Time " << bucketFullTime);
-  //TODO: add group Eleigibility Time
-  Time eligibilityTime = Max (Simulator::Now(),schedulerEleigibilityTime);
+  Time eligibilityTime = Max(Max (Simulator::Now(),schedulerEleigibilityTime),groupElibilityTime);
   NS_LOG_LOGIC ("Eligibility Time " << eligibilityTime);
 
-  if (eligibilityTime <= Simulator::Now() + (m_maxResidenceTime / 1.0E9))
+  if (eligibilityTime <= Simulator::Now() + (maxResidenceTime / 1.0E9))
   {
     //The frame is valid
-    //TODO : adjust group eligibilityTime
-
+    group.SetGroupElibilityTime (m_SchedulerGroupId,eligibilityTime);
     if (eligibilityTime < bucketFullTime)
     {
       m_bucketEmptyTime = schedulerEleigibilityTime;
