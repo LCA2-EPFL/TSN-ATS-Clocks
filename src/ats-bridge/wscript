@@ -11,11 +11,15 @@ def build(bld):
     module.source = [
         'model/ats-bridge.cc',
         'helper/ats-bridge-helper.cc',
+        'model/ats-transmission-queue-disc.cc',
+        'model/ats-scheduler-queue-disc.cc',
+        'model/ats-scheduler-group.cc',
         ]
 
     module_test = bld.create_ns3_module_test_library('ats-bridge')
     module_test.source = [
         'test/ats-bridge-test-suite.cc',
+        'test/ats-queue-disc-test-suice.cc',
         ]
 
     headers = bld(features='ns3header')
@@ -23,6 +27,9 @@ def build(bld):
     headers.source = [
         'model/ats-bridge.h',
         'helper/ats-bridge-helper.h',
+        'model/ats-transmission-queue-disc.h',
+        'model/ats-scheduler-queue-disc.h',
+        'model/ats-scheduler-group.h',
         ]
 
     if bld.env.ENABLE_EXAMPLES:
