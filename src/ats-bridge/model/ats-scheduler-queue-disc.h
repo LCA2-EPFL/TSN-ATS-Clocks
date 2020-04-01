@@ -22,6 +22,7 @@
 
 #include "ns3/queue-disc.h"
 #include "ns3/data-rate.h"
+#include "ns3/callback.h"
 
 namespace ns3 {
 
@@ -83,35 +84,35 @@ namespace ns3 {
        * 
        * \return offset
        */
-      uint32_t GetClockOffsetVaritionMax ();
+      Time GetClockOffsetVaritionMax ();
 
       /**
        * \brief Get ATSScheduler clock rate deviation max
        * 
        * \return rate deviation
        */
-      uint32_t GetClockRateDeviationMax ();
+      Time GetClockRateDeviationMax ();
 
       /**
        * \brief Get ATSScheduler arrival recognition delay max
        * 
        * \return Arrival Recognition Delay
        */
-      uint32_t GetArrivalRecognitionDelayMax ();
+      Time GetArrivalRecognitionDelayMax ();
 
       /**
        * \brief Get ATSScheduler processing delay max
        * 
        * \return processing delay Max
        */
-      uint32_t GetProcessingDelayMax ();
+      Time GetProcessingDelayMax ();
 
       /**
        * \brief Get ATSScheduler processing delay min
        * 
        * \return processing delay Min
        */
-      uint32_t GetProcessingDelayMin ();
+      Time GetProcessingDelayMin ();
 
 
       /**
@@ -119,35 +120,35 @@ namespace ns3 {
        * 
        * \param offset 
        */
-      void SetClockOffsetVaritionMax (uint32_t offset);
+      void SetClockOffsetVaritionMax (Time offset);
 
       /**
        * \brief Set ATSScheduler clock rate deviation max
        * 
        * \param rateDeviation
        */
-      void SetClockRateDeviationMax (uint32_t rateDeviation);
+      void SetClockRateDeviationMax (Time rateDeviation);
 
       /**
        * \brief Set ATSScheduler arrival recognition delay max
        * 
        * \param arrivalDeay
        */
-      void SetArrivalRecognitionDelayMax ( uint32_t arrivalDeay);
+      void SetArrivalRecognitionDelayMax ( Time arrivalDeay);
 
       /**
        * \brief Set ATSScheduler processing delay max
        * 
        * \param processDelaymax
        */
-      void SetProcessingDelayMax (uint32_t processDelaymax);
+      void SetProcessingDelayMax (Time processDelaymax);
 
       /**
        * \brief Set ATSScheduler processing delay min
        * 
        * \param processDelaymin
        */
-      void SetProcessingDelayMin (uint32_t processDelaymin);
+      void SetProcessingDelayMin (Time processDelaymin);
 
     private:
 
@@ -155,18 +156,30 @@ namespace ns3 {
       virtual Ptr<QueueDiscItem> DoDequeue (void);
       virtual bool CheckConfig (void);
       virtual void InitializeParams (void); 
-
+      void AssingAndProceed(Time eligibilityTime, Ptr<QueueDiscItem> item);
+      
       // parameters of ATS Scheduler queue disc leaf
 
       DataRate m_informationRate;
       uint32_t m_burstSize;
-      
+
       //Scheduler timing characteristic for time calculations
-      uint32_t m_clockOffsetVariationMax;
-      uint32_t m_clockRateDeviationMax;
-      uint32_t m_ArrivalRecognitionDelayMax;
-      uint32_t m_processingDelayMax;
-      uint32_t m_processingDelayMin;
+      Time m_clockOffsetVariationMax;
+      Time m_clockRateDeviationMax;
+      Time m_arrivalRecognitionDelayMax;
+      Time m_processingDelayMax;
+      Time m_processingDelayMin;
+
+      //Parameters for Tocken Bucket State machine 
+      Time m_bucketEmptyTime;
+      Time m_maxResidenceTime;
+
+      //Group to which this scheduler belongs 
+      uint32_t m_SchedulerGroupId;
+
+      typedef Callback<Ptr<QueueDiscItem>> EnqueueCallBack; 
+      virtual void SetEnqueueCallBack (EnqueueCallBack ec);
+      EnqueueCallBack m_enqueueCallBack;
 
   }; 
 
