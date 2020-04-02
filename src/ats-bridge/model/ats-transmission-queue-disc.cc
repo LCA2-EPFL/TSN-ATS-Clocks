@@ -103,23 +103,6 @@ namespace ns3{
     if (GetNInternalQueues () == 0)
     {
       // add a DropTail queue
-      AddInternalQueue (CreateObjectWithAttributes<DropTailQueue<QueueDiscItem>>
-                          ("MaxSize", QueueSizeValue (GetMaxSize ())));
-    }
-    if (GetNQueueDiscClasses () < 1)
-    {
-      NS_LOG_ERROR ("ATSTransmissionQueueDisc needs at least 1 classes");
-      return false;
-    }
-    return true;
-  }
-  
-  bool
-  ATSTransmissionQueueDisc::CheckConfig ()
-  {
-    if (GetNInternalQueues () == 0)
-    {
-      // add a DropTail queue
       AddInternalQueue (CreateObjectWithAttributes<DropTailQueue<QueueDiscItem> >
                           ("MaxSize", QueueSizeValue (GetMaxSize ())));
     }
