@@ -35,19 +35,13 @@ namespace ns3{
     .SetParent<QueueDisc> ()
     .SetGroupName("ATSBridge")
     .AddConstructor<ATSTransmissionQueueDisc> ()
-    .AddAttribute ("MaxSize",
-                   "The maximum number of packets accepted by FIFO internal queue disc",
-                   QueueSizeValue (QueueSize ("100p")),
-                   MakeQueueSizeAccessor (&QueueDisc::SetMaxSize,
-                                          &QueueDisc::GetMaxSize),
-                   MakeQueueSizeChecker ())
     ;
-
+    
   return tid;
 }
   
   ATSTransmissionQueueDisc::ATSTransmissionQueueDisc ()
-  : QueueDisc (QueueDiscSizePolicy::SINGLE_CHILD_QUEUE_DISC)
+  : QueueDisc (QueueDiscSizePolicy::NO_LIMITS)
   {
     NS_LOG_FUNCTION (this);
   }
@@ -88,40 +82,41 @@ namespace ns3{
   {
     NS_LOG_FUNCTION (this);
 
-    Ptr<QueueDiscItem> item = GetInternalQueue (0)->Dequeue ();
+    Ptr<QueueDiscItem> item;
 
-    NS_LOG_LOGIC ("Popped " << item);
+    for (uint32_t i = 0; i < GetNQueueDiscClasses (); i++)
+      {
+        if ((item = GetQueueDiscClass (i)->GetQueueDisc ()->Dequeue ()) != 0)
+          {
+            NS_LOG_LOGIC ("Popped from class " << i << ": " << item);
+            NS_LOG_LOGIC ("Number packets class  " << i << ": " << GetQueueDiscClass (i)->GetQueueDisc ()->GetNPackets ());
+            return item;
+          }
+      }
 
-    NS_LOG_LOGIC ("Number packets " << GetInternalQueue (0)->GetNPackets ());
+  NS_LOG_LOGIC ("Queue empty");
 
-    return item;
+  return item;
   }
   
   bool
   ATSTransmissionQueueDisc::CheckConfig ()
   {
-    if (GetNInternalQueues () == 0)
+    if (GetNInternalQueues () > 0)
     {
-      AddInternalQueue (CreateObjectWithAttributes<DropTailQueue<QueueDiscItem>>
-                          ("MaxSize", QueueSizeValue (GetMaxSize ())));
-    }
-    if (GetNInternalQueues () != 1)
-      {
-        NS_LOG_ERROR ("ATSTransmissionQueueDisc needs 1 internal queue");
+      NS_LOG_ERROR ("ATSTransmissionQueueDisc does not have internal queues");
         return false;
-      }
+    }
+    if (GetNQueueDiscClasses () < 1)
+    {
+      NS_LOG_ERROR ("PrioQueueDisc needs at least 1 classes");
+      return false;
+    }
     return true;
   }
   void 
   ATSTransmissionQueueDisc::InitializeParams ()
   {
     NS_LOG_FUNCTION (this);
-  }
-  
-  bool 
-  ATSTransmissionQueueDisc::ATSEnqueue (Ptr<QueueDiscItem> item)
-  {
-    NS_LOG_FUNCTION (this << item);
-    return GetInternalQueue (0)->Enqueue (item);
   }
 }

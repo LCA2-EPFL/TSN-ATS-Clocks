@@ -135,6 +135,7 @@ class AtsQueueDiscTestCase : public TestCase
 {
 public:
   AtsQueueDiscTestCase ();
+  void CheckDequeue (Ptr<ATSSchedulerQueueDisc> leaf);
   virtual void DoRun (void);
 };
 
@@ -142,11 +143,14 @@ AtsQueueDiscTestCase::AtsQueueDiscTestCase ()
   : TestCase ("AtsBridge test case (does nothing)")
 {
 }
-
+void
+AtsQueueDiscTestCase::CheckDequeue (Ptr<ATSSchedulerQueueDisc> leaf)
+{
+  NS_TEST_ASSERT_MSG_EQ (leaf->GetCurrentSize ().GetValue (), 0, "There should be no packets");
+}
 void
 AtsQueueDiscTestCase::DoRun (void)
 {
-
   /**Test 1: Simple enqueue ATSTransmissionQueueDisc 
    *          (1:1)
    * ATSTransmissionQueueDisc (Root)
@@ -166,6 +170,11 @@ AtsQueueDiscTestCase::DoRun (void)
   Time processDelayMin = Seconds (0);
   Time processDelayMax = Seconds (0);
   uint32_t pktSize = 0;
+  Address dst;
+  pktSize = 500;
+  uint32_t maxSize = 5;
+
+
   Ptr<ATSSchedulerQueueDisc> leaf = CreateObject<ATSSchedulerQueueDisc> ();
 
   NS_TEST_ASSERT_MSG_EQ (leaf->SetAttributeFailSafe ("Burst",UintegerValue (burst)),true,
@@ -182,15 +191,15 @@ AtsQueueDiscTestCase::DoRun (void)
                         "Verify that we can set the attribute ProcessDelayMin");
   NS_TEST_ASSERT_MSG_EQ (leaf->SetAttributeFailSafe ("ProcessDelayMax",TimeValue (processDelayMax)),true,
                         "Verify that we can set the attribute ProcessDelayMax"); 
+  NS_TEST_ASSERT_MSG_EQ (leaf->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, maxSize))), true,
+                         "Verify that we can set the attribute maxSize");
   
-  Address dst;
-  pktSize = 500;
+  
 
   Ptr<Packet> p1= Create<Packet> (pktSize);
-  Ptr<ATSQueueDiscTestItem> item = Create<ATSQueueDiscTestItem> (p1,dst,Seconds(0));
+  Ptr<ATSQueueDiscTestItem> item = Create<ATSQueueDiscTestItem> (p1,dst,Simulator::Now ());
 
   // Create Root queue disc and add class-filter
-  uint32_t maxSize = 5;
 
   Ptr<ATSTransmissionQueueDisc> ATSroot = CreateObject<ATSTransmissionQueueDisc> ();  
 
@@ -204,30 +213,29 @@ AtsQueueDiscTestCase::DoRun (void)
   ATSroot->AddPacketFilter (filter);
   filter->SetReturnValue (0);
 
-  NS_TEST_ASSERT_MSG_EQ (ATSroot->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, maxSize))), true,
-                         "Verify that we can set the attribute maxSize");
+  
   NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNQueueDiscClasses (),1, "Root queue disc does not have 1 class");
   NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNPacketFilters (),1, "There should be one paket filter");
   
-  ATSroot->SetMaxSize (QueueSize (QueueSizeUnit::PACKETS, maxSize));
   //Create the group object
   Ptr<ATSSchedulerGroup> group = CreateObject<ATSSchedulerGroup> ();
 
   group->InsertNewGroup (Seconds (10), Seconds (0));
   leaf->SetATSGroup (group);
 
-  //Set the callback of ATSScheduler to point to ATSTransmission FIFO queue. 
-  leaf->SetEnqueueCallBack(MakeCallback (&ATSTransmissionQueueDisc::ATSEnqueue, ATSroot));
-
   leaf->Initialize ();  
   ATSroot->Initialize ();
-  NS_TEST_ASSERT_MSG_EQ (ATSroot->GetCurrentSize ().GetValue (), 0, "There should be no packets");
-  ATSroot->Enqueue (Create<ATSQueueDiscTestItem> (p1,dst,Simulator::Now ()));
 
-  NS_TEST_ASSERT_MSG_EQ (ATSroot->GetCurrentSize ().GetValue (), 1, "There shoudl be one packet");
-  
+  NS_TEST_ASSERT_MSG_EQ (leaf->GetCurrentSize ().GetValue (), 0, "There should be no packets");
+  ATSroot->Enqueue (Create<ATSQueueDiscTestItem> (p1,dst,Simulator::Now ()));
+  NS_TEST_ASSERT_MSG_EQ (leaf->GetCurrentSize ().GetValue (), 1, "There should be one packet");
+  Simulator::Schedule (Seconds(1),&AtsQueueDiscTestCase::CheckDequeue, this, leaf);
+  Simulator::Stop (Seconds (1.3));
+  Simulator::Run ();
+
 
   std::cout << "holaaa" << std::endl;
+  Simulator::Destroy ();
 }
 
 // The TestSuite class names the TestSuite, identifies what type of TestSuite,

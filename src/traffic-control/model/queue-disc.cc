@@ -876,7 +876,6 @@ QueueDisc::Enqueue (Ptr<QueueDiscItem> item)
   // Thus, we do not have to call DropBeforeEnqueue here.
 
   // check that the received packet was either enqueued or dropped
-  NS_LOG_DEBUG (m_stats.nTotalEnqueuedPackets << "TOTAL PACKETS ENQUEUE");
   NS_ASSERT (m_stats.nTotalReceivedPackets == m_stats.nTotalDroppedPacketsBeforeEnqueue +
            m_stats.nTotalEnqueuedPackets);
   NS_ASSERT (m_stats.nTotalReceivedBytes == m_stats.nTotalDroppedBytesBeforeEnqueue +

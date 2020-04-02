@@ -22,6 +22,8 @@
 #include "ns3/simulator.h"
 #include "ns3/packet.h"
 #include "ns3/nstime.h"
+#include "ns3/drop-tail-queue.h"
+
 
 namespace ns3{
 
@@ -74,6 +76,12 @@ TypeId ATSSchedulerQueueDisc::GetTypeId (void)
                    TimeValue (Seconds (0)),
                    MakeTimeAccessor (&ATSSchedulerQueueDisc::m_processingDelayMax),
                    MakeTimeChecker ())
+    .AddAttribute ("MaxSize",
+                   "The max queue size",
+                   QueueSizeValue (QueueSize ("1000p")),
+                   MakeQueueSizeAccessor (&QueueDisc::SetMaxSize,
+                                          &QueueDisc::GetMaxSize),
+                   MakeQueueSizeChecker ())
    
   ;
 
@@ -187,13 +195,6 @@ ATSSchedulerQueueDisc::GetBurstSize ()
   return m_burstSize;
 }
 
-void 
-ATSSchedulerQueueDisc::SetEnqueueCallBack (EnqueueCallBack ec)
-{
-  NS_LOG_FUNCTION (this << &ec);
-  m_enqueueCallBack = ec;
-}
-
 void
 ATSSchedulerQueueDisc::SetATSGroup (Ptr<ATSSchedulerGroup> group)
 {
@@ -237,8 +238,8 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
     {
       m_bucketEmptyTime = schedulerEleigibilityTime + eligibilityTime - bucketFullTime;
     } 
-    AssingAndProceed (eligibilityTime, item);  
-    return true; 
+    return AssingAndProceed (eligibilityTime, item);  
+    
   }
   else 
   {
@@ -247,45 +248,7 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   }
 }
 
-Ptr<QueueDiscItem>
-ATSSchedulerQueueDisc::DoDequeue ()
-{
-  NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG (true,"This function shouldn't be called");
-  return 0;
-}
-
-bool 
-ATSSchedulerQueueDisc::CheckConfig ()
-{
-  NS_LOG_FUNCTION (this);
-  if (GetNInternalQueues () > 0)
-    {
-      NS_LOG_ERROR ("ATSSchedulerQueueDisc cannot have internal queues");
-      return false;
-    }
-
-  if (GetNPacketFilters () > 0)
-    {
-      NS_LOG_ERROR ("ATSSchedulerQueueDisc cannot have packet filters");
-      return false;
-    }
-
-  if (GetNQueueDiscClasses () > 0)
-    {
-      NS_LOG_ERROR ("ATSSchedulerQueueDisc cannot have classes");
-      return false;
-    }
-  if (!m_group)
-  {
-    NS_LOG_ERROR ("ATSSchedulerQueueDisc need a group to enqueue in a qdisc");
-    return false;
-  }
-  
-  return true;
-}
-
-void
+bool
 ATSSchedulerQueueDisc::AssingAndProceed (Time eligibilityTime, Ptr<QueueDiscItem> item)
 {
   NS_LOG_FUNCTION (this << eligibilityTime << item);
@@ -295,10 +258,60 @@ ATSSchedulerQueueDisc::AssingAndProceed (Time eligibilityTime, Ptr<QueueDiscItem
   //of ATSTransmissionQueueDisc. Them call to QueueDisc::Run to notify that there is a packet 
   //ready to transmit.
   //TODO change the method to ATS::Transmission Queue
-  m_enqueueCallBack (item);
-  //Simulator::Schedule (eligibilityTime, &ATSSchedulerQueueDisc::EnqueueInTransmission, this, item);
-  //TOO how can be call the rootQueue to execute Run. Maybe a flag to indicate 
-  //Simulator::ScheduleNow (&QueueDisc::Run, this);
+  bool retval;
+  retval = GetQueueDiscClass (0)->GetQueueDisc ()->Enqueue (item);
+
+  Simulator::Schedule (eligibilityTime, &QueueDisc::Run, this);
+  return retval;
+}
+
+Ptr<QueueDiscItem>
+ATSSchedulerQueueDisc::DoDequeue ()
+{
+  NS_LOG_FUNCTION (this);
+  return GetQueueDiscClass (0)->GetQueueDisc ()->Dequeue ();
+}
+
+bool 
+ATSSchedulerQueueDisc::CheckConfig ()
+{
+  NS_LOG_FUNCTION (this);
+  if (GetNPacketFilters () > 0)
+    {
+      NS_LOG_ERROR ("ATSSchedulerQueueDisc cannot have packet filters");
+      return false;
+    }
+
+  if (GetNInternalQueues () > 0)
+    {
+      NS_LOG_ERROR ("ATSSchedulerQueueDisc cannot have internal queues");
+      return false;
+    }
+  if (!m_group)
+  {
+    NS_LOG_ERROR ("ATSSchedulerQueueDisc need a group to enqueue in a qdisc");
+    return false;
+  }
+  if (GetNQueueDiscClasses () == 0)
+    {
+      // create a FIFO queue disc
+      ObjectFactory factory;
+      factory.SetTypeId ("ns3::FifoQueueDisc");
+      Ptr<QueueDisc> qd = factory.Create<QueueDisc> ();
+
+      if (!qd->SetMaxSize (GetMaxSize ()))
+        {
+          NS_LOG_ERROR ("Cannot set the max size of the child queue disc to that of TbfQueueDisc");
+          return false;
+        }
+      qd->Initialize ();
+
+      Ptr<QueueDiscClass> c = CreateObject<QueueDiscClass> ();
+      c->SetQueueDisc (qd);
+      AddQueueDiscClass (c);
+    }
+  
+  return true;
 }
 
 void 
@@ -309,11 +322,6 @@ ATSSchedulerQueueDisc::InitializeParams ()
   m_bucketEmptyTime = Simulator::Now ();
 }
 
-void
-ATSSchedulerQueueDisc::EnqueueInTransmission(Ptr<QueueDiscItem> item)
-{
-  NS_LOG_FUNCTION (this << item);
-  m_enqueueCallBack (item);
-}
+
 
 }

@@ -48,24 +48,14 @@ namespace ns3 {
        * \brief Destructor
        */
       virtual ~ATSTransmissionQueueDisc ();
-
-       /**
-       * \brief Function to enqueue in the internal FIFO queue, call by the ATSScheduler when 
-       * eligibility time has elapsed. 
-       */
-      bool ATSEnqueue (Ptr<QueueDiscItem> item);
     
-
     private:
 
       virtual bool DoEnqueue (Ptr<QueueDiscItem> item);
       virtual Ptr<QueueDiscItem> DoDequeue (void);
       virtual bool CheckConfig (void);
       virtual void InitializeParams (void); 
-      
-
-      
-      
+     
   }; 
 } //namespace ns3
 

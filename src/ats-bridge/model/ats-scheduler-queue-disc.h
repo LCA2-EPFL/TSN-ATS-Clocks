@@ -35,13 +35,6 @@ namespace ns3 {
   class ATSSchedulerQueueDisc : public QueueDisc
   {
     public:
-    
-      /**
-       * Callback to the enqueue method. In a first implementation, the this callback is set to
-       * the a method of ATSTrnasmissionQueue disc. However, the enqueue method of ATSScheduler
-       * is not specified in the standar 802.1Q, so this callback can be change. 
-       */
-      typedef Callback<bool,Ptr<QueueDiscItem>> EnqueueCallBack;
       /**
        * \brief Get the type ID.
        * \return the object TypeId
@@ -157,13 +150,6 @@ namespace ns3 {
        */
       void SetProcessingDelayMin (Time processDelaymin);
 
-       /**
-       * \brief Set callback to enqueue the packet ready for transmission
-       * 
-       * \param item
-       */
-      void SetEnqueueCallBack (EnqueueCallBack ec);
-      
       /**
        * \brief Set the pointer to ATSSchedulerGroup
        * 
@@ -178,8 +164,7 @@ namespace ns3 {
       virtual Ptr<QueueDiscItem> DoDequeue (void);
       virtual bool CheckConfig (void);
       virtual void InitializeParams (void); 
-      void AssingAndProceed(Time eligibilityTime, Ptr<QueueDiscItem> item);
-      void EnqueueInTransmission(Ptr<QueueDiscItem> item);
+      bool AssingAndProceed(Time eligibilityTime, Ptr<QueueDiscItem> item);
       
       // parameters of ATS Scheduler queue disc leaf
 
@@ -197,8 +182,6 @@ namespace ns3 {
       Time m_bucketEmptyTime;
       //Group to which this scheduler belongs 
       uint32_t m_SchedulerGroupId;
- 
-      EnqueueCallBack m_enqueueCallBack;
       Ptr<ATSSchedulerGroup> m_group;
   }; 
 
