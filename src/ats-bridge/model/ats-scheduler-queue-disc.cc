@@ -20,7 +20,7 @@
 #include "ats-scheduler-queue-disc.h"
 #include "ns3/log.h"
 #include "ns3/simulator.h"
-#include "ats-scheduler-group.h"
+#include "ns3/packet.h"
 
 namespace ns3{
 
@@ -73,6 +73,7 @@ TypeId ATSSchedulerQueueDisc::GetTypeId (void)
                    UintegerValue (0),
                    MakeUintegerAccessor (&ATSSchedulerQueueDisc::SetProcessingDelayMax),
                    MakeUintegerChecker <uint32_t>())
+   
   ;
 
   return tid;
@@ -185,6 +186,18 @@ ATSSchedulerQueueDisc::GetBurstSize ()
   return m_burstSize;
 }
 
+void 
+ATSSchedulerQueueDisc::SetEnqueueCallBack (EnqueueCallBack ec)
+{
+  m_enqueueCallBack = ec;
+}
+
+void
+ATSSchedulerQueueDisc::SetATSGroup (Ptr<ATSSchedulerGroup> group)
+{
+  m_group = group;
+}
+
 bool
 ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 {
@@ -194,14 +207,13 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   Time maxResidenceTime;
   Time groupElibilityTime;
 
-  ATSSchedulerGroup group = this->GetObject<ATSSchedulerGroup>;
-  maxResidenceTime = group.GetMaxResidenceTime (m_SchedulerGroupId);
-  groupElibilityTime = group.GetGroupElibilityTime (m_SchedulerGroupId);
+  maxResidenceTime = m_group->GetMaxResidenceTime (m_SchedulerGroupId);
+  groupElibilityTime = m_group->GetGroupElibilityTime (m_SchedulerGroupId);
   //implementetation of the Tocken Bucket shaper state machine
 
-  Time lenthRecoveryDuration = item->GetPacket.GetSize / m_informationRate;
+  Time lenthRecoveryDuration = Time::From (item->GetPacket()->GetSize ()/ m_informationRate.GetBitRate());
   NS_LOG_LOGIC ("LenthRecoveryDuration " << lenthRecoveryDuration);
-  Time emptyToFullDuration = m_burstSize / m_informationRate.GetBitRate*8;
+  Time emptyToFullDuration = Time::From (m_burstSize / m_informationRate.GetBitRate ()*8);
   NS_LOG_LOGIC ("Empty to full Duration " << emptyToFullDuration);
   Time schedulerEleigibilityTime = m_bucketEmptyTime + emptyToFullDuration;
   NS_LOG_LOGIC ("Scheduler Eligibility Time " << schedulerEleigibilityTime);
@@ -213,7 +225,7 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   if (eligibilityTime <= Simulator::Now() + (maxResidenceTime / 1.0E9))
   {
     //The frame is valid
-    group.SetGroupElibilityTime (m_SchedulerGroupId,eligibilityTime);
+    m_group->SetGroupElibilityTime (m_SchedulerGroupId,eligibilityTime);
     if (eligibilityTime < bucketFullTime)
     {
       m_bucketEmptyTime = schedulerEleigibilityTime;
@@ -237,6 +249,7 @@ ATSSchedulerQueueDisc::DoDequeue ()
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT_MSG (true,"This function shouldn't be called");
+  return 0;
 }
 
 bool 
@@ -260,6 +273,13 @@ ATSSchedulerQueueDisc::CheckConfig ()
       NS_LOG_ERROR ("ATSSchedulerQueueDisc cannot have classes");
       return false;
     }
+  if (!m_enqueueCallBack)
+    {
+      NS_LOG_ERROR ("ATSSchedulerQueueDisc need a callback to enqueue in a qdisc");
+      return false;
+    }
+  
+  return true;
 }
 
 void
@@ -272,15 +292,9 @@ ATSSchedulerQueueDisc::AssingAndProceed (Time eligibilityTime, Ptr<QueueDiscItem
   //of ATSTransmissionQueueDisc. Them call to QueueDisc::Run to notify that there is a packet 
   //ready to transmit.
   //TODO change the method to ATS::Transmission Queue
-  Simulator::Schedule (eligibilityTime, &m_enqueueCallBack,this, item);
+  Simulator::Schedule (eligibilityTime, &ATSSchedulerQueueDisc::EnqueueInTransmission, this, item);
   //TOO how can be call the rootQueue to execute Run. Maybe a flag to indicate 
-  Simulator::ScheduleNow (&QueueDisc::Run, this);
-}
-void
-ATSSchedulerQueueDisc::SetEnqueueCallBack (EnqueueCallBack ec)
-{ 
-  NS_LOG_FUNCTION (this << &ec);
-  m_enqueueCallBack = ec;
+  //Simulator::ScheduleNow (&QueueDisc::Run, this);
 }
 
 void 
@@ -289,6 +303,14 @@ ATSSchedulerQueueDisc::InitializeParams ()
   NS_LOG_FUNCTION (this);
   //TODO: maybe initialize params here before first packet enqueue (ie, bucketEmptytime...)
   m_bucketEmptyTime = Simulator::Now ();
+}
+
+void
+ATSSchedulerQueueDisc::EnqueueInTransmission(Ptr<QueueDiscItem> item)
+{
+  NS_LOG_FUNCTION (this << item);
+  NS_ASSERT_MSG (m_enqueueCallBack, "No enqueue callback set");
+  m_enqueueCallBack (item);
 }
 
 }

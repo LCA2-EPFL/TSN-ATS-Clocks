@@ -22,7 +22,7 @@
 
 #include "ns3/queue-disc.h"
 #include "ns3/data-rate.h"
-#include "ns3/callback.h"
+#include "ats-scheduler-group.h"
 
 namespace ns3 {
 
@@ -35,6 +35,7 @@ namespace ns3 {
   {
     public:
     
+      typedef std::function<void (Ptr<QueueDiscItem>)> EnqueueCallBack;
       /**
        * \brief Get the type ID.
        * \return the object TypeId
@@ -150,6 +151,21 @@ namespace ns3 {
        */
       void SetProcessingDelayMin (Time processDelaymin);
 
+       /**
+       * \brief Set callback to enqueue the packet ready for transmission
+       * 
+       * \param item
+       */
+      void SetEnqueueCallBack (EnqueueCallBack ec);
+      
+      /**
+       * \brief Set the pointer to ATSSchedulerGroup
+       * 
+       * \param group
+       */
+      void SetATSGroup (Ptr<ATSSchedulerGroup> group);
+      
+
     private:
 
       virtual bool DoEnqueue (Ptr<QueueDiscItem> item);
@@ -157,6 +173,7 @@ namespace ns3 {
       virtual bool CheckConfig (void);
       virtual void InitializeParams (void); 
       void AssingAndProceed(Time eligibilityTime, Ptr<QueueDiscItem> item);
+      void EnqueueInTransmission(Ptr<QueueDiscItem> item);
       
       // parameters of ATS Scheduler queue disc leaf
 
@@ -172,15 +189,11 @@ namespace ns3 {
 
       //Parameters for Tocken Bucket State machine 
       Time m_bucketEmptyTime;
-      Time m_maxResidenceTime;
-
       //Group to which this scheduler belongs 
       uint32_t m_SchedulerGroupId;
-
-      typedef Callback<Ptr<QueueDiscItem>> EnqueueCallBack; 
-      virtual void SetEnqueueCallBack (EnqueueCallBack ec);
+ 
       EnqueueCallBack m_enqueueCallBack;
-
+      Ptr<ATSSchedulerGroup> m_group;
   }; 
 
 } //namespace ns3
