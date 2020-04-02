@@ -18,8 +18,7 @@ def build(bld):
 
     module_test = bld.create_ns3_module_test_library('ats-bridge')
     module_test.source = [
-        'test/ats-bridge-test-suite.cc',
-        'test/ats-queue-disc-test-suice.cc',
+        'test/ats-queue-disc-test-suite.cc',
         ]
 
     headers = bld(features='ns3header')
