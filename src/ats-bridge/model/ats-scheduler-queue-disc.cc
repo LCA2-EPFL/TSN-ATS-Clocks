@@ -21,6 +21,7 @@
 #include "ns3/log.h"
 #include "ns3/simulator.h"
 #include "ns3/packet.h"
+#include "ns3/nstime.h"
 
 namespace ns3{
 
@@ -42,37 +43,37 @@ TypeId ATSSchedulerQueueDisc::GetTypeId (void)
     .AddAttribute ("Rate",
                    "Rate at which tokens enter the first bucket in bps or Bps.",
                    DataRateValue (DataRate ("125KB/s")),
-                   MakeDataRateAccessor (&ATSSchedulerQueueDisc::SetInformationRate),
+                   MakeDataRateAccessor (&ATSSchedulerQueueDisc::m_informationRate),
                    MakeDataRateChecker ())
     .AddAttribute ("ClockOffsetVariationMax",
                    "Max clock offset variation. Difference between ATS scheduler clock and ATS transmission clock max variation." 
                    "If null, it is initialized to 0",
-                   UintegerValue (0),
-                   MakeUintegerAccessor (&ATSSchedulerQueueDisc::SetClockOffsetVaritionMax),
-                   MakeUintegerChecker<uint32_t> ())
+                   TimeValue (Seconds (0)),
+                   MakeTimeAccessor (&ATSSchedulerQueueDisc::m_clockOffsetVariationMax),
+                   MakeTimeChecker ())
     .AddAttribute ("ClockRateDeviationMax",
                    "Max absolute deviation from specific nominal rate during operation."
                    "If null, it is initialized to 0",
-                   UintegerValue (0),
-                   MakeUintegerAccessor (&ATSSchedulerQueueDisc::SetClockRateDeviationMax),
-                   MakeUintegerChecker <uint32_t>())
+                   TimeValue (Seconds (0)),
+                   MakeTimeAccessor (&ATSSchedulerQueueDisc::m_clockRateDeviationMax),
+                   MakeTimeChecker ())
     .AddAttribute ("ArrivalRecognitionDelayMax",
                    "Maximun delay between the time a frame passes the boundary the network physical medium and its subsequence"
                    "recognition by the associated ATS scheduler clock."
                    "If null, it is initialized to 0",
-                   UintegerValue (0),
-                   MakeUintegerAccessor (&ATSSchedulerQueueDisc::SetArrivalRecognitionDelayMax),
-                   MakeUintegerChecker <uint32_t>())
+                   TimeValue (Seconds (0)),
+                   MakeTimeAccessor (&ATSSchedulerQueueDisc::m_arrivalRecognitionDelayMax),
+                   MakeTimeChecker ())
     .AddAttribute ("ProcessDelayMin",
                    "If null, it is initialized to 0",
-                   UintegerValue (0),
-                   MakeUintegerAccessor (&ATSSchedulerQueueDisc::SetProcessingDelayMin),
-                   MakeUintegerChecker <uint32_t>())
+                   TimeValue (Seconds (0)),
+                   MakeTimeAccessor (&ATSSchedulerQueueDisc::m_processingDelayMin),
+                   MakeTimeChecker ())
     .AddAttribute ("ProcessDelayMax",
                    "If null, it is initialized to 0",
-                   UintegerValue (0),
-                   MakeUintegerAccessor (&ATSSchedulerQueueDisc::SetProcessingDelayMax),
-                   MakeUintegerChecker <uint32_t>())
+                   TimeValue (Seconds (0)),
+                   MakeTimeAccessor (&ATSSchedulerQueueDisc::m_processingDelayMax),
+                   MakeTimeChecker ())
    
   ;
 
@@ -80,7 +81,7 @@ TypeId ATSSchedulerQueueDisc::GetTypeId (void)
 }
 
 ATSSchedulerQueueDisc::ATSSchedulerQueueDisc ()
-: QueueDisc (QueueDiscSizePolicy::NO_LIMITS)
+: QueueDisc (QueueDiscSizePolicy::SINGLE_CHILD_QUEUE_DISC)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -189,12 +190,14 @@ ATSSchedulerQueueDisc::GetBurstSize ()
 void 
 ATSSchedulerQueueDisc::SetEnqueueCallBack (EnqueueCallBack ec)
 {
+  NS_LOG_FUNCTION (this << &ec);
   m_enqueueCallBack = ec;
 }
 
 void
 ATSSchedulerQueueDisc::SetATSGroup (Ptr<ATSSchedulerGroup> group)
 {
+  NS_LOG_FUNCTION (this << group);
   m_group = group;
 }
 
@@ -212,15 +215,15 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   //implementetation of the Tocken Bucket shaper state machine
 
   Time lenthRecoveryDuration = Time::From (item->GetPacket()->GetSize ()/ m_informationRate.GetBitRate());
-  NS_LOG_LOGIC ("LenthRecoveryDuration " << lenthRecoveryDuration);
+  NS_LOG_DEBUG ("LenthRecoveryDuration " << lenthRecoveryDuration);
   Time emptyToFullDuration = Time::From (m_burstSize / m_informationRate.GetBitRate ()*8);
-  NS_LOG_LOGIC ("Empty to full Duration " << emptyToFullDuration);
+  NS_LOG_DEBUG ("Empty to full Duration " << emptyToFullDuration);
   Time schedulerEleigibilityTime = m_bucketEmptyTime + emptyToFullDuration;
-  NS_LOG_LOGIC ("Scheduler Eligibility Time " << schedulerEleigibilityTime);
+  NS_LOG_DEBUG ("Scheduler Eligibility Time " << schedulerEleigibilityTime);
   Time bucketFullTime = m_bucketEmptyTime + emptyToFullDuration;
-  NS_LOG_LOGIC ("Bucket Full Time " << bucketFullTime);
+  NS_LOG_DEBUG ("Bucket Full Time " << bucketFullTime);
   Time eligibilityTime = Max(Max (Simulator::Now(),schedulerEleigibilityTime),groupElibilityTime);
-  NS_LOG_LOGIC ("Eligibility Time " << eligibilityTime);
+  NS_LOG_DEBUG ("Eligibility Time " << eligibilityTime);
 
   if (eligibilityTime <= Simulator::Now() + (maxResidenceTime / 1.0E9))
   {
@@ -235,7 +238,7 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       m_bucketEmptyTime = schedulerEleigibilityTime + eligibilityTime - bucketFullTime;
     } 
     AssingAndProceed (eligibilityTime, item);  
-    return true;
+    return true; 
   }
   else 
   {
@@ -273,11 +276,11 @@ ATSSchedulerQueueDisc::CheckConfig ()
       NS_LOG_ERROR ("ATSSchedulerQueueDisc cannot have classes");
       return false;
     }
-  if (!m_enqueueCallBack)
-    {
-      NS_LOG_ERROR ("ATSSchedulerQueueDisc need a callback to enqueue in a qdisc");
-      return false;
-    }
+  if (!m_group)
+  {
+    NS_LOG_ERROR ("ATSSchedulerQueueDisc need a group to enqueue in a qdisc");
+    return false;
+  }
   
   return true;
 }
@@ -287,12 +290,13 @@ ATSSchedulerQueueDisc::AssingAndProceed (Time eligibilityTime, Ptr<QueueDiscItem
 {
   NS_LOG_FUNCTION (this << eligibilityTime << item);
   Time assignedEligibilityTime = eligibilityTime + m_clockOffsetVariationMax + m_processingDelayMax;
-  NS_LOG_LOGIC ("Assing Elibility Time " << assignedEligibilityTime); 
+  NS_LOG_DEBUG ("Assing Elibility Time " << assignedEligibilityTime); 
   //Schedule the event (at elegibility time) that will insert the packet in the FIFO queue 
   //of ATSTransmissionQueueDisc. Them call to QueueDisc::Run to notify that there is a packet 
   //ready to transmit.
   //TODO change the method to ATS::Transmission Queue
-  Simulator::Schedule (eligibilityTime, &ATSSchedulerQueueDisc::EnqueueInTransmission, this, item);
+  m_enqueueCallBack (item);
+  //Simulator::Schedule (eligibilityTime, &ATSSchedulerQueueDisc::EnqueueInTransmission, this, item);
   //TOO how can be call the rootQueue to execute Run. Maybe a flag to indicate 
   //Simulator::ScheduleNow (&QueueDisc::Run, this);
 }
@@ -309,7 +313,6 @@ void
 ATSSchedulerQueueDisc::EnqueueInTransmission(Ptr<QueueDiscItem> item)
 {
   NS_LOG_FUNCTION (this << item);
-  NS_ASSERT_MSG (m_enqueueCallBack, "No enqueue callback set");
   m_enqueueCallBack (item);
 }
 

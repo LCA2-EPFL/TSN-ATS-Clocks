@@ -47,7 +47,7 @@ namespace ns3{
 }
   
   ATSTransmissionQueueDisc::ATSTransmissionQueueDisc ()
-  : QueueDisc (QueueDiscSizePolicy::NO_LIMITS)
+  : QueueDisc (QueueDiscSizePolicy::SINGLE_CHILD_QUEUE_DISC)
   {
     NS_LOG_FUNCTION (this);
   }
@@ -75,7 +75,7 @@ namespace ns3{
     {
       NS_LOG_DEBUG ("Packet filters returned " << ret);
 
-      NS_ASSERT_MSG (ret < GetNQueueDiscClasses (), "Selected band out of range");
+      //NS_ASSERT_MSG (ret < GetNQueueDiscClasses (), "Selected band out of range");
 
       bool retval = GetQueueDiscClass (ret)->GetQueueDisc ()->Enqueue (item);
 
@@ -102,8 +102,7 @@ namespace ns3{
   {
     if (GetNInternalQueues () == 0)
     {
-      // add a DropTail queue
-      AddInternalQueue (CreateObjectWithAttributes<DropTailQueue<QueueDiscItem> >
+      AddInternalQueue (CreateObjectWithAttributes<DropTailQueue<QueueDiscItem>>
                           ("MaxSize", QueueSizeValue (GetMaxSize ())));
     }
     if (GetNInternalQueues () != 1)
@@ -117,7 +116,6 @@ namespace ns3{
   ATSTransmissionQueueDisc::InitializeParams ()
   {
     NS_LOG_FUNCTION (this);
-    //TODO: maybe initialize params here before first packet enqueue
   }
   
   bool 

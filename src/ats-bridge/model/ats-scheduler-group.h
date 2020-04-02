@@ -22,6 +22,7 @@
 
 #include "ns3/object.h"
 #include "ns3/nstime.h"
+#include <map>
 
 namespace ns3 {
 
@@ -40,7 +41,7 @@ namespace ns3 {
        * \brief Get the type ID.
        * \return the object TypeId
        */
-      static TypeId GetTypeId (void);
+    static TypeId GetTypeId (void);
 
     ATSSchedulerGroup ();
     ~ATSSchedulerGroup ();

@@ -54,11 +54,7 @@ namespace ns3 {
        * eligibility time has elapsed. 
        */
       bool ATSEnqueue (Ptr<QueueDiscItem> item);
-    protected:
-      /**
-       * \brief Dispose of the object
-       */
-      virtual void DoDispose (void);
+    
 
     private:
 

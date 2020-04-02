@@ -1,9 +1,9 @@
-FAIL: Test Suite "node-scheduling" (0.000)
-FAIL: Test Suite "Check that basic event handling is working with ns3::ListScheduler" (0.000)
+FAIL: Test Suite "ats-queue" (0.000)
+FAIL: Test Suite "AtsBridge test case (does nothing)" (0.000)
     Details:
-      Message:   Wrong local time
-      Condition: localTime (actual) == m_clock -> GetLocalTime () (limit)
-      Actual:    +4000000000.0ns
-      Limit:     +10000000000.0ns
-      File:      ../src/clock/test/node-schedule-test.cc
-      Line:      99
+      Message:   There shoudl be one packet
+      Condition: ATSroot->GetCurrentSize ().GetValue () (actual) == 1 (limit)
+      Actual:    0
+      Limit:     1
+      File:      ../src/ats-bridge/test/ats-queue-disc-test-suite.cc
+      Line:      226

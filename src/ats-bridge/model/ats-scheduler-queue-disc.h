@@ -23,6 +23,7 @@
 #include "ns3/queue-disc.h"
 #include "ns3/data-rate.h"
 #include "ats-scheduler-group.h"
+#include "ns3/callback.h"
 
 namespace ns3 {
 
@@ -35,7 +36,12 @@ namespace ns3 {
   {
     public:
     
-      typedef std::function<void (Ptr<QueueDiscItem>)> EnqueueCallBack;
+      /**
+       * Callback to the enqueue method. In a first implementation, the this callback is set to
+       * the a method of ATSTrnasmissionQueue disc. However, the enqueue method of ATSScheduler
+       * is not specified in the standar 802.1Q, so this callback can be change. 
+       */
+      typedef Callback<bool,Ptr<QueueDiscItem>> EnqueueCallBack;
       /**
        * \brief Get the type ID.
        * \return the object TypeId
