@@ -142,6 +142,7 @@ public:
   AtsQueueDiscTestCase ();
   void CheckDequeue (Ptr<QueueDisc> leaf, uint32_t numP, std::string printStatement);
   void Enqueue (Address dst, uint32_t pktSize, Ptr<QueueDisc> queue);
+  void EnqueueWithFilter (Address dst, uint32_t pktSize, Ptr<QueueDisc> queue,Ptr<ATSQueueDiscTestFilter> filter,uint32_t value);
   virtual void DoRun (void);
 };
 
@@ -152,6 +153,12 @@ AtsQueueDiscTestCase::AtsQueueDiscTestCase ()
 void
 AtsQueueDiscTestCase::Enqueue (Address dst, uint32_t pktSize, Ptr<QueueDisc> queue)
 {
+  queue->Enqueue (Create<ATSQueueDiscTestItem> (Create<Packet> (pktSize),dst,Simulator::Now ()));
+}
+void
+AtsQueueDiscTestCase::EnqueueWithFilter (Address dst, uint32_t pktSize, Ptr<QueueDisc> queue, Ptr<ATSQueueDiscTestFilter> filter,uint32_t value)
+{
+  filter->SetReturnValue (value);
   queue->Enqueue (Create<ATSQueueDiscTestItem> (Create<Packet> (pktSize),dst,Simulator::Now ()));
 }
 void
@@ -230,8 +237,8 @@ AtsQueueDiscTestCase::DoRun (void)
   ATSroot->AddPacketFilter (filter);
   filter->SetReturnValue (0);
 
-  NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNQueueDiscClasses (),1, "Root queue disc does not have 1 class");
-  NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNPacketFilters (),1, "There should be one paket filter");
+  NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNQueueDiscClasses (), 1, "Root queue disc does not have 1 class");
+  NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNPacketFilters (), 1, "There should be one paket filter");
   
   //Create the group object which is shared by all the ATSScheduler that belong to the same group.
   group = CreateObject<ATSSchedulerGroup> ();
@@ -289,23 +296,23 @@ AtsQueueDiscTestCase::DoRun (void)
   Time eligibilityTimeP4 = Seconds (0.041); // SchedulerEligbilityTime = 0.03s (BucketEmptyTime)+ 1000B/100KB = 0.04s
   Time eligibilityTimeP5 = Seconds (0.051); // SchedulerEligbilityTime = 0.04s (BucketEmptyTime)+ 1000B/100KB = 0.05s
 
-  Simulator::Schedule (Seconds (0.0015),&AtsQueueDiscTestCase::CheckDequeue, this, leaf, 5,"There should be 5 packets ready for transmission");
-  Simulator::Schedule (eligibilityTimeP1,&AtsQueueDiscTestCase::CheckDequeue, this, leaf, 4,"There should be 4 packets");
-  Simulator::Schedule (eligibilityTimeP2,&AtsQueueDiscTestCase::CheckDequeue, this, leaf, 3,"There should be 3 packets");
-  Simulator::Schedule (eligibilityTimeP3,&AtsQueueDiscTestCase::CheckDequeue, this, leaf, 2,"There should be 2 packets");
-  Simulator::Schedule (eligibilityTimeP4,&AtsQueueDiscTestCase::CheckDequeue, this, leaf, 1,"There should be 1 packets");
-  Simulator::Schedule (eligibilityTimeP5,&AtsQueueDiscTestCase::CheckDequeue, this, leaf, 0,"There should be 0 packets");
+  Simulator::Schedule (Seconds (0.0015),&AtsQueueDiscTestCase::CheckDequeue, this, leaf, 5, "There should be 5 packets ready for transmission");
+  Simulator::Schedule (eligibilityTimeP1,&AtsQueueDiscTestCase::CheckDequeue, this, leaf, 4, "There should be 4 packets");
+  Simulator::Schedule (eligibilityTimeP2,&AtsQueueDiscTestCase::CheckDequeue, this, leaf, 3, "There should be 3 packets");
+  Simulator::Schedule (eligibilityTimeP3,&AtsQueueDiscTestCase::CheckDequeue, this, leaf, 2, "There should be 2 packets");
+  Simulator::Schedule (eligibilityTimeP4,&AtsQueueDiscTestCase::CheckDequeue, this, leaf, 1, "There should be 1 packets");
+  Simulator::Schedule (eligibilityTimeP5,&AtsQueueDiscTestCase::CheckDequeue, this, leaf, 0, "There should be 0 packets");
 
   //Dequeue 5 packets from trnasmission queue Quota=5
-  Simulator::Schedule (eligibilityTimeP5,&AtsQueueDiscTestCase::CheckDequeue, this, ATSroot, 5,"There should be 5 packets ready for trnasmission");
+  Simulator::Schedule (eligibilityTimeP5,&AtsQueueDiscTestCase::CheckDequeue, this, ATSroot, 5, "There should be 5 packets ready for trnasmission");
   Simulator::Schedule (Seconds (0.07),&AtsQueueDiscTestCase::CheckDequeue, this, ATSroot, 0,"There should be 0 packets ready for trnasmission"); 
   Simulator::Schedule (Seconds (0.06),&QueueDisc::Run, ATSroot);
-  Simulator::Schedule (Seconds (0.07),&AtsQueueDiscTestCase::CheckDequeue, this, ATSroot, 0,"There should be 0 packets ready for trnasmission");
+  Simulator::Schedule (Seconds (0.07),&AtsQueueDiscTestCase::CheckDequeue, this, ATSroot, 0, "There should be 0 packets ready for trnasmission");
 
   Simulator::Stop (Seconds (0.1));
   Simulator::Run ();
 
-  //Test3: In this test we have strucuture where one ATSTransmissionQueue have two ATSSchedulerQueue attach. Both same group
+  //Test3: In this test we have a strucuture where one ATSTransmissionQueue have two ATSSchedulerQueue attach. Both same group
   /**(1:2)
    *              ATSTransmissionQueueDisc (Root) 
                   *            |
@@ -319,7 +326,7 @@ AtsQueueDiscTestCase::DoRun (void)
    * 1. Enqueue 2 packets, 1 in each leaf and check that the eligibilityTime is calculated properly depending on the groupTime
    * 2. Commited Information rate of leaf1 is the half of leaf2. This means that when calculating eligibility time of 
    * Packet 2 (leaf2), the groupEligibilityTime should be bigger that schedulerEligibilityTime. 
-   * 3. check that organuization into groups results in non-decreasing ordering of elibilityTimes.
+   * 3. Check that organization into groups results in non-decreasing ordering of elibilityTimes.
    */
   Ptr<ATSSchedulerQueueDisc> leaf1 = CreateObject<ATSSchedulerQueueDisc> ();
   Ptr<ATSSchedulerQueueDisc> leaf2 = CreateObject<ATSSchedulerQueueDisc> ();
@@ -373,8 +380,8 @@ AtsQueueDiscTestCase::DoRun (void)
   ATSroot->AddQueueDiscClass (c2);
   ATSroot->AddPacketFilter (filter);
 
-  NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNQueueDiscClasses (),2, "Root queue disc does not have 2 class");
-  NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNPacketFilters (),1, "There should be one paket filter");
+  NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNQueueDiscClasses (), 2, "Root queue disc does not have 2 class");
+  NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNPacketFilters (), 1, "There should be one paket filter");
   
   group = CreateObject<ATSSchedulerGroup> ();
   group->InsertNewGroup (Seconds (1000000000), Seconds (0));
@@ -415,33 +422,192 @@ AtsQueueDiscTestCase::DoRun (void)
 
   filter->SetReturnValue (0);
   AtsQueueDiscTestCase::Enqueue (dst, pktSize, ATSroot);
-  Simulator::ScheduleNow (&AtsQueueDiscTestCase::CheckDequeue, this, leaf1, 1,"There should be 1 packets");
+  Simulator::ScheduleNow (&AtsQueueDiscTestCase::CheckDequeue, this, leaf1, 1, "There should be 1 packets");
 
   filter->SetReturnValue (1);
   AtsQueueDiscTestCase::Enqueue (dst, pktSize, ATSroot);
-  Simulator::ScheduleNow (&AtsQueueDiscTestCase::CheckDequeue, this, leaf2, 1,"There should be 1 packets");
+  Simulator::ScheduleNow (&AtsQueueDiscTestCase::CheckDequeue, this, leaf2, 1, "There should be 1 packets");
 
   eligibilityTimeP1 =  Seconds (0.02); // SchedulerEligbilityTime = 0.1s (BucketEmptyTime) (initialize with Simulator::Now ())+ 500B/100KB = 0.12s
   eligibilityTimeP2 = eligibilityTimeP1; // SchedulerEligbilityTime = 0.11s (GroupEligbilityTime is the max) EligibilityTime = GroupEligbilityTime  
                                       // (Should not be SchedulerEligbilityTime = 0.1s (BucketEmptyTime)+ 1000B/100KB = 0.11s)
   
-  Simulator::Schedule (Seconds (0.01),&AtsQueueDiscTestCase::CheckDequeue, this, leaf2, 1,"There should be 1 packets in leaf2");
-  Simulator::Schedule (eligibilityTimeP1,&AtsQueueDiscTestCase::CheckDequeue, this, leaf1, 0,"There should be 1 packets in leaf1");
-  Simulator::Schedule (eligibilityTimeP2,&AtsQueueDiscTestCase::CheckDequeue, this, leaf2, 0,"There should be 1 packets in leaf2");
+  Simulator::Schedule (Seconds (0.01),&AtsQueueDiscTestCase::CheckDequeue, this, leaf2, 1, "There should be 1 packets in leaf2");
+  Simulator::Schedule (eligibilityTimeP1,&AtsQueueDiscTestCase::CheckDequeue, this, leaf1, 0, "There should be 1 packets in leaf1");
+  Simulator::Schedule (eligibilityTimeP2,&AtsQueueDiscTestCase::CheckDequeue, this, leaf2, 0, "There should be 1 packets in leaf2");
 
-  Simulator::Schedule (Seconds (0.03),&AtsQueueDiscTestCase::CheckDequeue, this, ATSroot, 2,"There should be 5 packets ready for trnasmission");
+  Simulator::Schedule (Seconds (0.03),&AtsQueueDiscTestCase::CheckDequeue, this, ATSroot, 2, "There should be 5 packets ready for trnasmission");
   
   Simulator::Schedule (Seconds (0.03),&QueueDisc::Run, ATSroot);
-  Simulator::Schedule (Seconds (0.04),&AtsQueueDiscTestCase::CheckDequeue, this, ATSroot, 0,"There should be 0 packets ready for trnasmission");
+  Simulator::Schedule (Seconds (0.04),&AtsQueueDiscTestCase::CheckDequeue, this, ATSroot, 0, "There should be 0 packets ready for trnasmission");
 
 
-  Simulator::Stop (Seconds (1.15));
+  Simulator::Stop (Seconds (0.2));
+  Simulator::Run ();
+  //Test 4:  In this test we have a strucuture where one ATSTransmissionQueue have 3 ATSSchedulerQueue attach. 
+  // Each of Scheduler with different parameters to calculate the eligbilities times
+  /**(1:4)
+   *                                             ATSTransmissionQueueDisc (Root) 
+                  *            |------------------------------------------------------------|       
+                  *            |                                                            |
+                  *            |                                                            |
+                  *     ---------------                                                     |
+                  *     |   Group 1   |                                                     |    Group 2     
+                  *     |             |                                                     |                
+   *                 (Leaf1)        (Leaf2)                                              (Leaf3)                 
+   *               Rate = 100KB   Rate = 500KB                                         Rate = 500KB      
+   *               Burst = 8000B   Burst = 4000B                                       Burst = 9000B     
+   * 
+   * 1. ElibilityTime > BucketFullTime 
+   * -> 2 possible cases: ->> Lenght(frame) > CommittedBurstSize 
+   *                      ->> Max (SchedulerEligibilityTime | ArrivalTime | GroupTime) = ArrivalTime || GroupTime
+   * 2. Enqueue P1 and P2 size = 10000B in leaf1 and check case 1. P1 eligibiltyTime = 0.4s P2 = eligibiltyTime = 0.52s (Sim starts at 0.3)
+   * Due to Lenght(frame) > CommittedBurstSize
+   * 3. Enqueue P3 and P4 size = 1000B in leaf 2 such groupTime is max and check case 2. 
+   * GroupTime = 0.52s bigger than arrivalTime = 0.35s and schedulerTime = 0.351s.
+   * P3 eligibiltyTime = 0.52s and P4 = 0.52s (because groupTime is still bigger that SchedulerEligibiltyTime)
+   * P5-P10 in leaf1 and leaf3, check the enqueue in the transmission queue is done in the proper order.
+   */
+
+  leaf1 = CreateObject<ATSSchedulerQueueDisc> ();
+  leaf2 = CreateObject<ATSSchedulerQueueDisc> ();
+  Ptr<ATSSchedulerQueueDisc> leaf3 = CreateObject<ATSSchedulerQueueDisc> ();
+
+  rate1 = DataRate ("100KB/s");
+  DataRate rate2 = DataRate ("500KB/s");
+  
+  uint32_t burst1 = 8000;
+  uint32_t burst2 = 4000;
+  uint32_t burst3 = 9000;
+
+  NS_TEST_ASSERT_MSG_EQ (leaf1->SetAttributeFailSafe ("Burst",UintegerValue (burst1)),true,
+                        "Verify that we can set the attribute Burst");
+  NS_TEST_ASSERT_MSG_EQ (leaf2->SetAttributeFailSafe ("Burst",UintegerValue (burst2)),true,
+                        "Verify that we can set the attribute Burst"); 
+  NS_TEST_ASSERT_MSG_EQ (leaf3->SetAttributeFailSafe ("Burst",UintegerValue (burst3)),true,
+                        "Verify that we can set the attribute Burst");
+ 
+  NS_TEST_ASSERT_MSG_EQ (leaf1->SetAttributeFailSafe ("Rate",DataRateValue (rate1)),true,
+                        "Verify that we can set the attribute Rate");
+  NS_TEST_ASSERT_MSG_EQ (leaf2->SetAttributeFailSafe ("Rate",DataRateValue (rate2)),true,
+                        "Verify that we can set the attribute Rate");
+  NS_TEST_ASSERT_MSG_EQ (leaf3->SetAttributeFailSafe ("Rate",DataRateValue (rate2)),true,
+                        "Verify that we can set the attribute Rate");
+  
+                        
+  NS_TEST_ASSERT_MSG_EQ (leaf1->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, maxSize))), true,
+                         "Verify that we can set the attribute maxSize");
+  NS_TEST_ASSERT_MSG_EQ (leaf2->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, maxSize))), true,
+                         "Verify that we can set the attribute maxSize");      
+  NS_TEST_ASSERT_MSG_EQ (leaf3->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, maxSize))), true,
+                         "Verify that we can set the attribute maxSize");
+   
+
+  ATSroot = CreateObject<ATSTransmissionQueueDisc> ();
+
+  NS_TEST_ASSERT_MSG_EQ (ATSroot->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, 20))), true,
+                         "Verify that we can set the attribute maxSize");
+  c1 = CreateObject<QueueDiscClass> ();
+  c2 = CreateObject<QueueDiscClass> ();
+  Ptr<QueueDiscClass> c3 = CreateObject<QueueDiscClass> ();
+ 
+
+  filter = CreateObject<ATSQueueDiscTestFilter> (true);
+  c1->SetQueueDisc (leaf1);
+  c2->SetQueueDisc (leaf2);
+  c3->SetQueueDisc (leaf3);
+
+  ATSroot->AddQueueDiscClass (c1);
+  ATSroot->AddQueueDiscClass (c2);
+  ATSroot->AddQueueDiscClass (c3);
+ 
+  ATSroot->AddPacketFilter (filter);
+
+  NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNQueueDiscClasses (), 3, "Root queue disc does not have 3 class");
+  NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNPacketFilters (), 1, "There should be one paket filter");
+  
+  group = CreateObject<ATSSchedulerGroup> ();
+
+  group->InsertNewGroup (Seconds (10), Seconds (0));
+  group->InsertNewGroup (Seconds (10), Seconds (0));
+  leaf1->SetATSGroup (group, 0);
+  leaf2->SetATSGroup (group, 0);
+  leaf3->SetATSGroup (group, 1);
+
+  leaf1->Initialize ();
+  leaf2->Initialize (); 
+  leaf3->Initialize ();
+
+  Config::SetDefault ("ns3::QueueDisc::Quota", UintegerValue (5));
+  NodeContainer nodesC;
+  nodesC.Create (2);
+  Ptr<SimpleNetDevice> txDevC = CreateObject<SimpleNetDevice> ();
+  nodesC.Get (0)->AddDevice (txDevC);
+  Ptr<SimpleNetDevice> rxDevC = CreateObject<SimpleNetDevice> ();
+  nodesC.Get (1)->AddDevice (rxDevB);
+  Ptr<SimpleChannel> channelC = CreateObject<SimpleChannel> ();
+  txDevC->SetChannel (channelC);
+  rxDevC->SetChannel (channelC);
+  txDevC->SetNode (nodesC.Get (0));
+  rxDevC->SetNode (nodesC.Get (1));
+
+  dst = txDevC->GetAddress ();
+
+  Ptr<TrafficControlLayer> tcC = CreateObject<TrafficControlLayer> ();
+  nodesC.Get (0)->AggregateObject (tcC);
+  tcC->SetRootQueueDiscOnDevice (txDevC, ATSroot);
+  tcC->Initialize ();
+   
+  ATSroot->Initialize ();
+
+  leaf1->SetSendCallback ([ATSroot] (Ptr<QueueDiscItem> item)
+                          {ATSroot->Enqueue (item);});
+  leaf1->SetTransmissionQueue (ATSroot); 
+  leaf2->SetSendCallback ([ATSroot] (Ptr<QueueDiscItem> item)
+                          {ATSroot->Enqueue (item);});
+  leaf2->SetTransmissionQueue (ATSroot);
+  leaf3->SetSendCallback ([ATSroot] (Ptr<QueueDiscItem> item)
+                          {ATSroot->Enqueue (item);});
+  leaf3->SetTransmissionQueue (ATSroot); 
+
+  filter->SetReturnValue (0);
+
+  AtsQueueDiscTestCase::Enqueue (dst, 10000, ATSroot);
+
+  Simulator::ScheduleNow (&AtsQueueDiscTestCase::CheckDequeue, this, leaf1, 1, "There should be P1 packets in leaf1");
+  //P1 and P2
+  Simulator::Schedule (Seconds (0.0001), &AtsQueueDiscTestCase::EnqueueWithFilter, this, dst, 10000, ATSroot, filter,0);
+  Simulator::Schedule (Seconds (0.09),&AtsQueueDiscTestCase::CheckDequeue, this, leaf1, 2, "There should be 2  packets in leaf1");
+  Simulator::Schedule (Seconds (0.101),&AtsQueueDiscTestCase::CheckDequeue, this, leaf1, 1, "There should be P2 (P1 just left) packets in leaf1");
+  Simulator::Schedule (Seconds (0.2201),&AtsQueueDiscTestCase::CheckDequeue, this, leaf1, 0, "There should be 0 (P2 just left) packets in leaf1");
+  //P3 and P4
+  Simulator::Schedule (Seconds (0.05), &AtsQueueDiscTestCase::EnqueueWithFilter, this, dst, 1000, ATSroot, filter,1);
+  Simulator::Schedule (Seconds (0.05), &AtsQueueDiscTestCase::EnqueueWithFilter, this, dst, 1000, ATSroot,filter,1);
+  Simulator::Schedule (Seconds (0.21),&AtsQueueDiscTestCase::CheckDequeue, this, leaf2, 2, "There should be 2 packets in leaf2");
+  Simulator::Schedule (Seconds (0.221),&AtsQueueDiscTestCase::CheckDequeue, this, leaf2, 0, "There should be 0 packets in leaf2");
+
+  
+  //P5-P10
+  Simulator::Schedule (Seconds (0.23), &AtsQueueDiscTestCase::EnqueueWithFilter, this, dst, 1000, ATSroot, filter,2);
+  Simulator::Schedule (Seconds (0.23), &AtsQueueDiscTestCase::EnqueueWithFilter, this, dst, 1000, ATSroot, filter,2);
+  Simulator::Schedule (Seconds (0.23), &AtsQueueDiscTestCase::EnqueueWithFilter, this, dst, 1000, ATSroot, filter,0);
+  Simulator::Schedule (Seconds (0.23), &AtsQueueDiscTestCase::EnqueueWithFilter, this, dst, 1000, ATSroot, filter,0);
+  Simulator::Schedule (Seconds (0.23), &AtsQueueDiscTestCase::EnqueueWithFilter, this, dst, 1000, ATSroot, filter,0);
+
+  Simulator::Schedule (Seconds (0.23),&AtsQueueDiscTestCase::CheckDequeue, this, leaf3, 2, "There should be 2 packets in leaf3");
+  Simulator::Schedule (Seconds (0.23),&AtsQueueDiscTestCase::CheckDequeue, this, leaf1, 3, "There should be 3 packets in leaf1");
+  Simulator::Schedule (Seconds (0.231),&AtsQueueDiscTestCase::CheckDequeue, this, ATSroot, 9, "There should be 6 + 3(in leaf1) packets in root");
+  Simulator::Schedule (Seconds (0.3),&AtsQueueDiscTestCase::CheckDequeue, this, ATSroot, 9, "There should be 9 packets in leaf2");
+
+
+  
+
+  Simulator::Stop (Seconds (0.6));
   Simulator::Run ();
 
-
-
-
-
+  
+  
+  
   Simulator::Destroy ();
 }
 

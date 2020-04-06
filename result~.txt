@@ -1,2 +1,23 @@
-PASS: Test Suite "ats-queue" (0.010)
-PASS: Test Suite "AtsBridge test case (does nothing)" (0.010)
+FAIL: Test Suite "ats-queue" (0.010)
+FAIL: Test Suite "AtsBridge test case (does nothing)" (0.010)
+    Details:
+      Message:   There should be 5 packets in leaf1
+      Condition: ats->GetCurrentSize ().GetValue () (actual) == numP (limit)
+      Actual:    3
+      Limit:     5
+      File:      ../src/ats-bridge/test/ats-queue-disc-test-suite.cc
+      Line:      167
+    Details:
+      Message:   There should be 6 packets in root
+      Condition: ats->GetCurrentSize ().GetValue () (actual) == numP (limit)
+      Actual:    9
+      Limit:     6
+      File:      ../src/ats-bridge/test/ats-queue-disc-test-suite.cc
+      Line:      167
+    Details:
+      Message:   There should be 9 packets in leaf2
+      Condition: ats->GetCurrentSize ().GetValue () (actual) == numP (limit)
+      Actual:    0
+      Limit:     9
+      File:      ../src/ats-bridge/test/ats-queue-disc-test-suite.cc
+      Line:      167

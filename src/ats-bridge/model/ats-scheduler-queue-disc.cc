@@ -217,7 +217,7 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   groupElibilityTime = m_group->GetGroupElibilityTime (m_SchedulerGroupId);
 
   //implementetation of the Tocken Bucket shaper state machine
-  NS_LOG_DEBUG ("Frame length: " << item->GetPacket()->GetSize () << "Information Rate: " << m_informationRate.GetBitRate ());
+  NS_LOG_DEBUG ("Frame length: " << item->GetPacket()->GetSize ()*8 << "Information Rate: " << m_informationRate.GetBitRate ());
   
   Time lenthRecoveryDuration = m_informationRate.CalculateBytesTxTime (item->GetPacket()->GetSize ());
   NS_LOG_DEBUG ("LenthRecoveryDuration " << lenthRecoveryDuration);
@@ -226,17 +226,16 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
  
   NS_LOG_DEBUG ("Empty to full Duration " << emptyToFullDuration);
   
-  Time schedulerEleigibilityTime = m_bucketEmptyTime + lenthRecoveryDuration;
+  Time schedulerEligibilityTime = m_bucketEmptyTime + lenthRecoveryDuration;
   
-  NS_LOG_DEBUG ("Scheduler Eligibility Time " << schedulerEleigibilityTime);
+  NS_LOG_DEBUG ("Scheduler Eligibility Time " << schedulerEligibilityTime);
  
   Time bucketFullTime = m_bucketEmptyTime + emptyToFullDuration;
  
   NS_LOG_DEBUG ("Bucket Full Time " << bucketFullTime);
-  NS_LOG_DEBUG ("Arrival Time: " << Simulator::Now ());
   NS_LOG_DEBUG ("Group Eligibility Time:" << groupElibilityTime);
   
-  Time eligibilityTime = Max(Max (arrivalTime,schedulerEleigibilityTime),groupElibilityTime);
+  Time eligibilityTime = Max(Max (arrivalTime,schedulerEligibilityTime),groupElibilityTime);
   
   NS_LOG_DEBUG ("Eligibility Time " << eligibilityTime);
   
@@ -248,12 +247,12 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
     m_group->SetGroupElibilityTime (m_SchedulerGroupId,eligibilityTime);
     if (eligibilityTime < bucketFullTime)
     {
-      m_bucketEmptyTime = schedulerEleigibilityTime;
+      m_bucketEmptyTime = schedulerEligibilityTime;
       NS_LOG_DEBUG ("EligibilityTime < bucketFullTime -> BucketEmptyTime = " << m_bucketEmptyTime);
     }
     else
     {
-      m_bucketEmptyTime = schedulerEleigibilityTime + eligibilityTime - bucketFullTime;
+      m_bucketEmptyTime = schedulerEligibilityTime + eligibilityTime - bucketFullTime;
       NS_LOG_DEBUG ("EligibilityTime > bucketFullTime -> BucketEmptyTime = " << m_bucketEmptyTime);
     } 
     return AssingAndProceed (eligibilityTime, item);  
@@ -327,7 +326,7 @@ ATSSchedulerQueueDisc::CheckConfig ()
 
       if (!qd->SetMaxSize (GetMaxSize ()))
         {
-          NS_LOG_ERROR ("Cannot set the max size of the child queue disc to that of TbfQueueDisc");
+          NS_LOG_ERROR ("Cannot set the max size of the child queue disc to that of ATSSchedulerQueueDisc");
           return false;
         }
       qd->Initialize ();
