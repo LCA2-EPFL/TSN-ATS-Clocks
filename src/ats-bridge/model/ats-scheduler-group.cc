@@ -52,8 +52,6 @@ void
 ATSSchedulerGroup::InsertNewGroup (Time maxResidenceTime, Time groupEligibilityTime)
 {
   NS_LOG_FUNCTION (this << maxResidenceTime << groupEligibilityTime);
-  m_params_t.maxResidenceTime = maxResidenceTime;
-  m_params_t.groupEligibilityTime = groupEligibilityTime;
 
   m_groupTable[m_NGroup].maxResidenceTime = maxResidenceTime;
   m_groupTable[m_NGroup].groupEligibilityTime = groupEligibilityTime;
@@ -68,6 +66,8 @@ ATSSchedulerGroup::GetMaxResidenceTime (uint32_t id)
   std::map <uint32_t,Parameter_T>::iterator it;
 
   it = m_groupTable.find (id);
+
+  NS_LOG_DEBUG ("Obtained Residence time for group: " << id << "Time: " << it->second.maxResidenceTime);
 
   return it->second.maxResidenceTime;
 }
