@@ -35,13 +35,19 @@ namespace ns3{
     .SetParent<QueueDisc> ()
     .SetGroupName("ATSBridge")
     .AddConstructor<ATSTransmissionQueueDisc> ()
+    .AddAttribute ("MaxSize",
+                   "The max queue size",
+                   QueueSizeValue (QueueSize ("100p")),
+                   MakeQueueSizeAccessor (&QueueDisc::SetMaxSize,
+                                          &QueueDisc::GetMaxSize),
+                   MakeQueueSizeChecker ())
     ;
     
   return tid;
 }
   
   ATSTransmissionQueueDisc::ATSTransmissionQueueDisc ()
-  : QueueDisc (QueueDiscSizePolicy::NO_LIMITS)
+  : QueueDisc (QueueDiscSizePolicy::SINGLE_INTERNAL_QUEUE)
   {
     NS_LOG_FUNCTION (this);
   }
@@ -55,26 +61,41 @@ namespace ns3{
   ATSTransmissionQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   {
     NS_LOG_FUNCTION (this << item);
-
-    // Classify with an stream filter classifier
-    int32_t ret = Classify (item);
-
-    if (ret==PacketFilter::PF_NO_MATCH)
+    bool retval = false;
+   
+    if(m_state == TransmissionQueueState::STREAM_FILTERING)
     {
-      //Unable to classify the packet.
-      //TODO: drop packet
-      return false;
+      NS_LOG_DEBUG ("Strem filtering state");
+      // Classify with an stream filter classifier
+      int32_t ret = Classify (item);
+      NS_LOG_DEBUG ("Classifier return value: " << ret);
+
+      if (ret==PacketFilter::PF_NO_MATCH)
+      {
+        //Unable to classify the packet.
+        //TODO: drop packet
+        return false;
+      }
+      else
+      {
+        retval = GetQueueDiscClass (ret)->GetQueueDisc ()->Enqueue (item);
+      }
     }
-    else
+      
+    if (m_state ==TransmissionQueueState::READY_FOR_TRANSMISSION)  
     {
-      NS_LOG_DEBUG ("Packet filters returned " << ret);
-
-      //NS_ASSERT_MSG (ret < GetNQueueDiscClasses (), "Selected band out of range");
-
-      bool retval = GetQueueDiscClass (ret)->GetQueueDisc ()->Enqueue (item);
-
-      return retval;
+      NS_LOG_DEBUG ("Ready for transmission, enqueuing in internal queue");
+      NS_LOG_DEBUG ("QUEUE tam: " << GetInternalQueue (0)->GetMaxSize ());
+      retval = GetInternalQueue (0)->Enqueue (item);
+      if (!retval)
+      {
+        NS_LOG_WARN ("Packet enqueue failed. Check the size of the internal queues");
+      }
+      m_state = TransmissionQueueState::STREAM_FILTERING;
     }
+
+    return retval;
+    
   }
 
   Ptr<QueueDiscItem>
@@ -83,34 +104,25 @@ namespace ns3{
     NS_LOG_FUNCTION (this);
 
     Ptr<QueueDiscItem> item;
-
-    for (uint32_t i = 0; i < GetNQueueDiscClasses (); i++)
-      {
-        if ((item = GetQueueDiscClass (i)->GetQueueDisc ()->Dequeue ()) != 0)
-          {
-            NS_LOG_LOGIC ("Popped from class " << i << ": " << item);
-            NS_LOG_LOGIC ("Number packets class  " << i << ": " << GetQueueDiscClass (i)->GetQueueDisc ()->GetNPackets ());
-            return item;
-          }
-      }
-
-  NS_LOG_LOGIC ("Queue empty");
-
-  return item;
+    item = GetInternalQueue (0)->Dequeue ();
+    return item;
   }
   
   bool
   ATSTransmissionQueueDisc::CheckConfig ()
   {
-    if (GetNInternalQueues () > 0)
-    {
-      NS_LOG_ERROR ("ATSTransmissionQueueDisc does not have internal queues");
-        return false;
-    }
+    
     if (GetNQueueDiscClasses () < 1)
     {
-      NS_LOG_ERROR ("PrioQueueDisc needs at least 1 classes");
+      NS_LOG_ERROR ("ATSTransmissionQueue needs at least 1 class");
       return false;
+    }
+
+    if (GetNInternalQueues () == 0)
+    {
+      // add a DropTail queue
+      AddInternalQueue (CreateObjectWithAttributes<DropTailQueue<QueueDiscItem> >
+                          ("MaxSize", QueueSizeValue (GetMaxSize ())));
     }
     return true;
   }
@@ -118,5 +130,13 @@ namespace ns3{
   ATSTransmissionQueueDisc::InitializeParams ()
   {
     NS_LOG_FUNCTION (this);
+    m_state = TransmissionQueueState::STREAM_FILTERING;
+  }
+
+  void 
+  ATSTransmissionQueueDisc::SetATSToTransmission ()
+  {
+    NS_LOG_FUNCTION (this);
+    m_state = TransmissionQueueState::READY_FOR_TRANSMISSION;
   }
 }

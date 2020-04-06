@@ -48,14 +48,37 @@ namespace ns3 {
        * \brief Destructor
        */
       virtual ~ATSTransmissionQueueDisc ();
+
+      void TransmissionEnqueue (Ptr<QueueDiscItem> item);
     
+      /**
+       * \brief Destructor
+       */
+      /**
+       * \brief Enumeration of the available state to handle the enqueue process.
+       * 
+       * - READY_FOR_TRANSMISSION: A packet is ready for transmission. The packet to be enqueued must be passed
+       *  to the internal transmission queue.
+       * - STREAM_FILTERING: The packet to enqueue must be passed to the queue classes depending on the classifier
+       */
+
+      enum TransmissionQueueState
+      {
+        READY_FOR_TRANSMISSION, 
+        STREAM_FILTERING
+      };
+
+      void SetATSToTransmission ();      
+      
     private:
 
       virtual bool DoEnqueue (Ptr<QueueDiscItem> item);
       virtual Ptr<QueueDiscItem> DoDequeue (void);
       virtual bool CheckConfig (void);
-      virtual void InitializeParams (void); 
-     
+      virtual void InitializeParams (void);
+
+      TransmissionQueueState m_state; //Queue state 
+    
   }; 
 } //namespace ns3
 
