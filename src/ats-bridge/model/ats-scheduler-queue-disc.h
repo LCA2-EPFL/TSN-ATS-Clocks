@@ -24,6 +24,7 @@
 #include "ns3/data-rate.h"
 #include "ats-scheduler-group.h"
 #include "ns3/callback.h"
+#include "ats-transmission-queue-disc.h"
 
 namespace ns3 {
 
@@ -155,8 +156,16 @@ namespace ns3 {
        * 
        * \param group
        */
-      void SetATSGroup (Ptr<ATSSchedulerGroup> group);
+      void SetATSGroup (Ptr<ATSSchedulerGroup> group, uint32_t id);
+
+      /**
+       * \brief Set transmission queue for this scheduler
+       * 
+       * \param transmissionQueue
+       */
+      void SetTransmissionQueue (Ptr<ATSTransmissionQueueDisc> transmissionQueue);
       
+     
 
     private:
 
@@ -165,6 +174,7 @@ namespace ns3 {
       virtual bool CheckConfig (void);
       virtual void InitializeParams (void); 
       bool AssingAndProceed(Time eligibilityTime, Ptr<QueueDiscItem> item);
+      void ReadyForTransmission ();
       
       // parameters of ATS Scheduler queue disc leaf
 
@@ -183,6 +193,9 @@ namespace ns3 {
       //Group to which this scheduler belongs 
       uint32_t m_SchedulerGroupId;
       Ptr<ATSSchedulerGroup> m_group;
+
+      //ATS transmission Queue attach to this Scheduler
+      Ptr<ATSTransmissionQueueDisc> m_transmissionQueue;
   }; 
 
 } //namespace ns3
