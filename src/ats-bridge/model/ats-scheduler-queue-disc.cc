@@ -39,12 +39,12 @@ TypeId ATSSchedulerQueueDisc::GetTypeId (void)
     .AddConstructor<ATSSchedulerQueueDisc> ()
     .AddAttribute ("Burst",
                    "Size of the committed burst in bytes",
-                   UintegerValue (125000),
+                   UintegerValue (1000),
                    MakeUintegerAccessor (&ATSSchedulerQueueDisc::SetBurstSize),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("Rate",
                    "Rate at which tokens enter the first bucket in bps or Bps.",
-                   DataRateValue (DataRate ("125KB/s")),
+                   DataRateValue (DataRate ("100KB/s")),
                    MakeDataRateAccessor (&ATSSchedulerQueueDisc::m_informationRate),
                    MakeDataRateChecker ())
     .AddAttribute ("ClockOffsetVariationMax",
@@ -196,10 +196,11 @@ ATSSchedulerQueueDisc::GetBurstSize ()
 }
 
 void
-ATSSchedulerQueueDisc::SetATSGroup (Ptr<ATSSchedulerGroup> group)
+ATSSchedulerQueueDisc::SetATSGroup (Ptr<ATSSchedulerGroup> group, uint32_t id)
 {
-  NS_LOG_FUNCTION (this << group);
+  NS_LOG_FUNCTION (this << group << id);
   m_group = group;
+  m_SchedulerGroupId = id;
 }
 
 bool
@@ -210,33 +211,50 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 
   Time maxResidenceTime;
   Time groupElibilityTime;
+  Time arrivalTime = Simulator::Now ();
 
   maxResidenceTime = m_group->GetMaxResidenceTime (m_SchedulerGroupId);
   groupElibilityTime = m_group->GetGroupElibilityTime (m_SchedulerGroupId);
+
   //implementetation of the Tocken Bucket shaper state machine
-
-  Time lenthRecoveryDuration = Time::From (item->GetPacket()->GetSize ()/ m_informationRate.GetBitRate());
+  NS_LOG_DEBUG ("Frame length: " << item->GetPacket()->GetSize () << "Information Rate: " << m_informationRate.GetBitRate ());
+  
+  Time lenthRecoveryDuration = m_informationRate.CalculateBytesTxTime (item->GetPacket()->GetSize ());
   NS_LOG_DEBUG ("LenthRecoveryDuration " << lenthRecoveryDuration);
-  Time emptyToFullDuration = Time::From (m_burstSize / m_informationRate.GetBitRate ()*8);
+ 
+  Time emptyToFullDuration = m_informationRate.CalculateBytesTxTime (m_burstSize);
+ 
   NS_LOG_DEBUG ("Empty to full Duration " << emptyToFullDuration);
-  Time schedulerEleigibilityTime = m_bucketEmptyTime + emptyToFullDuration;
+  
+  Time schedulerEleigibilityTime = m_bucketEmptyTime + lenthRecoveryDuration;
+  
   NS_LOG_DEBUG ("Scheduler Eligibility Time " << schedulerEleigibilityTime);
+ 
   Time bucketFullTime = m_bucketEmptyTime + emptyToFullDuration;
+ 
   NS_LOG_DEBUG ("Bucket Full Time " << bucketFullTime);
-  Time eligibilityTime = Max(Max (Simulator::Now(),schedulerEleigibilityTime),groupElibilityTime);
+  NS_LOG_DEBUG ("Arrival Time: " << Simulator::Now ());
+  NS_LOG_DEBUG ("Group Eligibility Time:" << groupElibilityTime);
+  
+  Time eligibilityTime = Max(Max (arrivalTime,schedulerEleigibilityTime),groupElibilityTime);
+  
   NS_LOG_DEBUG ("Eligibility Time " << eligibilityTime);
+  
+  NS_LOG_DEBUG (Time::FromDouble (arrivalTime.GetNanoSeconds () +  (maxResidenceTime.GetSeconds () / 1.0E9), Time::S));
 
-  if (eligibilityTime <= Simulator::Now() + (maxResidenceTime / 1.0E9))
+  if (eligibilityTime <= Time::FromDouble (arrivalTime.GetNanoSeconds () +  (maxResidenceTime.GetSeconds () / 1.0E9), Time::S))
   {
     //The frame is valid
     m_group->SetGroupElibilityTime (m_SchedulerGroupId,eligibilityTime);
     if (eligibilityTime < bucketFullTime)
     {
       m_bucketEmptyTime = schedulerEleigibilityTime;
+      NS_LOG_DEBUG ("EligibilityTime < bucketFullTime -> BucketEmptyTime = " << m_bucketEmptyTime);
     }
     else
     {
       m_bucketEmptyTime = schedulerEleigibilityTime + eligibilityTime - bucketFullTime;
+      NS_LOG_DEBUG ("EligibilityTime > bucketFullTime -> BucketEmptyTime = " << m_bucketEmptyTime);
     } 
     return AssingAndProceed (eligibilityTime, item);  
     
@@ -244,6 +262,7 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   else 
   {
     //The frame is invalid: Do not enqueue. 
+    NS_LOG_DEBUG ("FRAME INVALID");
     return false;
   }
 }
@@ -254,14 +273,20 @@ ATSSchedulerQueueDisc::AssingAndProceed (Time eligibilityTime, Ptr<QueueDiscItem
   NS_LOG_FUNCTION (this << eligibilityTime << item);
   Time assignedEligibilityTime = eligibilityTime + m_clockOffsetVariationMax + m_processingDelayMax;
   NS_LOG_DEBUG ("Assing Elibility Time " << assignedEligibilityTime); 
+
+
   //Schedule the event (at elegibility time) that will insert the packet in the FIFO queue 
   //of ATSTransmissionQueueDisc. Them call to QueueDisc::Run to notify that there is a packet 
   //ready to transmit.
   //TODO change the method to ATS::Transmission Queue
+
   bool retval;
   retval = GetQueueDiscClass (0)->GetQueueDisc ()->Enqueue (item);
 
-  Simulator::Schedule (eligibilityTime, &QueueDisc::Run, this);
+  //Schedule an event which will enqueue the item in the the transmission queue 
+ 
+  
+  Simulator::Schedule (assignedEligibilityTime - Simulator::Now (), &ATSSchedulerQueueDisc::ReadyForTransmission, this);
   return retval;
 }
 
@@ -269,6 +294,7 @@ Ptr<QueueDiscItem>
 ATSSchedulerQueueDisc::DoDequeue ()
 {
   NS_LOG_FUNCTION (this);
+  //Dequeue a packet from the queue to place it in the transmission queue. 
   return GetQueueDiscClass (0)->GetQueueDisc ()->Dequeue ();
 }
 
@@ -322,6 +348,25 @@ ATSSchedulerQueueDisc::InitializeParams ()
   m_bucketEmptyTime = Simulator::Now ();
 }
 
+void
+ATSSchedulerQueueDisc::ReadyForTransmission ()
+{
+  NS_LOG_FUNCTION (this);
 
+  //Set Transmission Attribute of ATSTransmission queue and enqueue the packet(READY for transmission)
+  //m_send callback of this QueueDisc has to be set up to point to the transmission 
+  //queue before calling this method. This transmission queue is an internal queue of
+  //ATSTranmissionQueue.
+  
+  Ptr<QueueDiscItem> item = DoDequeue ();
+  m_transmissionQueue->SetATSToTransmission ();
+  m_transmissionQueue->Enqueue (item);
+}
+
+void 
+ATSSchedulerQueueDisc::SetTransmissionQueue (Ptr<ATSTransmissionQueueDisc> transmissionQueue)
+{
+  m_transmissionQueue = transmissionQueue;
+}
 
 }
