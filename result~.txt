@@ -1,0 +1,2 @@
+PASS: Test Suite "ats-queue" (0.010)
+PASS: Test Suite "AtsBridge test case (does nothing)" (0.010)

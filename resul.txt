@@ -1,2 +1,0 @@
-PASS: Test Suite "node-scheduling" (0.000)
-PASS: Test Suite "Check that basic event handling is working with ns3::ListScheduler" (0.000)
