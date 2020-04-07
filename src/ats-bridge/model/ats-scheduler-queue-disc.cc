@@ -207,7 +207,6 @@ bool
 ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 {
   NS_LOG_FUNCTION (this << item);
-  //Set group parameters
 
   Time maxResidenceTime;
   Time groupElibilityTime;
@@ -216,31 +215,22 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   maxResidenceTime = m_group->GetMaxResidenceTime (m_SchedulerGroupId);
   groupElibilityTime = m_group->GetGroupElibilityTime (m_SchedulerGroupId);
 
-  //implementetation of the Tocken Bucket shaper state machine
-  NS_LOG_DEBUG ("Frame length: " << item->GetPacket()->GetSize ()*8 << "Information Rate: " << m_informationRate.GetBitRate ());
-  
   Time lenthRecoveryDuration = m_informationRate.CalculateBytesTxTime (item->GetPacket()->GetSize ());
-  NS_LOG_DEBUG ("LenthRecoveryDuration " << lenthRecoveryDuration);
- 
   Time emptyToFullDuration = m_informationRate.CalculateBytesTxTime (m_burstSize);
- 
-  NS_LOG_DEBUG ("Empty to full Duration " << emptyToFullDuration);
-  
   Time schedulerEligibilityTime = m_bucketEmptyTime + lenthRecoveryDuration;
-  
-  NS_LOG_DEBUG ("Scheduler Eligibility Time " << schedulerEligibilityTime);
- 
   Time bucketFullTime = m_bucketEmptyTime + emptyToFullDuration;
- 
-  NS_LOG_DEBUG ("Bucket Full Time " << bucketFullTime);
-  NS_LOG_DEBUG ("Group Eligibility Time:" << groupElibilityTime);
-  
   Time eligibilityTime = Max(Max (arrivalTime,schedulerEligibilityTime),groupElibilityTime);
   
+  NS_LOG_DEBUG ("Frame length: " << item->GetPacket()->GetSize ()*8 << "Information Rate: " << m_informationRate.GetBitRate ());
+  NS_LOG_DEBUG ("LenthRecoveryDuration " << lenthRecoveryDuration);
+  NS_LOG_DEBUG ("Empty to full Duration " << emptyToFullDuration);
+  NS_LOG_DEBUG ("Scheduler Eligibility Time " << schedulerEligibilityTime);
+  NS_LOG_DEBUG ("Bucket Full Time " << bucketFullTime);
+  NS_LOG_DEBUG ("Group Eligibility Time:" << groupElibilityTime);
   NS_LOG_DEBUG ("Eligibility Time " << eligibilityTime);
-  
   NS_LOG_DEBUG (Time::FromDouble (arrivalTime.GetNanoSeconds () +  (maxResidenceTime.GetSeconds () / 1.0E9), Time::S));
-
+  
+  
   if (eligibilityTime <= Time::FromDouble (arrivalTime.GetNanoSeconds () +  (maxResidenceTime.GetSeconds () / 1.0E9), Time::S))
   {
     //The frame is valid
