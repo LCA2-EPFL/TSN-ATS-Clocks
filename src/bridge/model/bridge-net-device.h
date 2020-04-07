@@ -141,7 +141,7 @@ protected:
    * \param destination the packet destination
    * \param packetType the packet type (e.g., host, broadcast, etc.)
    */
-  void ReceiveFromDevice (Ptr<NetDevice> device, Ptr<const Packet> packet, uint16_t protocol,
+  virtual void ReceiveFromDevice (Ptr<NetDevice> device, Ptr<const Packet> packet, uint16_t protocol,
                           Address const &source, Address const &destination, PacketType packetType);
 
   /**
@@ -152,7 +152,7 @@ protected:
    * \param src the packet source
    * \param dst the packet destination
    */
-  void ForwardUnicast (Ptr<NetDevice> incomingPort, Ptr<const Packet> packet,
+  virtual void ForwardUnicast (Ptr<NetDevice> incomingPort, Ptr<const Packet> packet,
                        uint16_t protocol, Mac48Address src, Mac48Address dst);
 
   /**
@@ -163,7 +163,7 @@ protected:
    * \param src the packet source
    * \param dst the packet destination
    */
-  void ForwardBroadcast (Ptr<NetDevice> incomingPort, Ptr<const Packet> packet,
+  virtual void ForwardBroadcast (Ptr<NetDevice> incomingPort, Ptr<const Packet> packet,
                          uint16_t protocol, Mac48Address src, Mac48Address dst);
 
   /**
@@ -171,7 +171,7 @@ protected:
    * \param source source address
    * \param port the port the source is sending from
    */
-  void Learn (Mac48Address source, Ptr<NetDevice> port);
+  virtual void Learn (Mac48Address source, Ptr<NetDevice> port);
 
   /**
    * \brief Gets the port associated to a source address
