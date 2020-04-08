@@ -4,13 +4,13 @@
 #include "ns3/network-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/ats-bridge-module.h"
-#include "ns3/csma-module.h"
+#include "ns3/point-to-point-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/traffic-control-module.h"
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("AtsBridgeExample");
+NS_LOG_COMPONENT_DEFINE ("P2pAtsBridgeExample");
 
 int 
 main (int argc, char *argv[])
@@ -24,24 +24,24 @@ main (int argc, char *argv[])
 
   NS_LOG_INFO ("Create nodes.");
   NodeContainer terminals;
-  terminals.Create (4);
+  terminals.Create (2);
 
   NodeContainer csmaSwitch;
   csmaSwitch.Create (1);
 
   NS_LOG_INFO ("Build Topology");
-  CsmaHelper csma;
-  csma.SetChannelAttribute ("DataRate", DataRateValue (5000000));
-  csma.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (2)));
+  PointToPointHelper p2p;
+  p2p.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
+  p2p.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (2)));
 
   // Create the p2p links, from each terminal to the switch
 
   NetDeviceContainer terminalDevices;
   NetDeviceContainer switchDevices;
 
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 2; i++)
     {
-      NetDeviceContainer link = csma.Install (NodeContainer (terminals.Get (i), csmaSwitch));
+      NetDeviceContainer link = p2p.Install (NodeContainer (terminals.Get (i), csmaSwitch));
       terminalDevices.Add (link.Get (0));
       switchDevices.Add (link.Get (1));
     }
@@ -75,7 +75,7 @@ main (int argc, char *argv[])
   ApplicationContainer app = onoff.Install (terminals.Get (0));
   // Start the application
   app.Start (Seconds (1.0));
-  app.Stop (Seconds (2.0));
+  app.Stop (Seconds (10.0));
 
   // Create an optional packet sink to receive these packets
   PacketSinkHelper sink ("ns3::UdpSocketFactory",
@@ -90,7 +90,7 @@ main (int argc, char *argv[])
                       AddressValue (InetSocketAddress (Ipv4Address ("10.1.1.1"), port)));
   app = onoff.Install (terminals.Get (3));
   app.Start (Seconds (1.1));
-  app.Stop (Seconds (2.0));
+  app.Stop (Seconds (10.0));
 
   app = sink.Install (terminals.Get (0));
   app.Start (Seconds (0.0));
@@ -102,7 +102,7 @@ main (int argc, char *argv[])
   // Trace output will be sent to the file "csma-bridge.tr"
   //
   AsciiTraceHelper ascii;
-  csma.EnableAsciiAll (ascii.CreateFileStream ("csma-ats-bridge.tr"));
+  p2p.EnableAsciiAll (ascii.CreateFileStream ("p2p-bridge.tr"));
 
   //
   // Also configure some tcpdump traces; each interface will be traced.
@@ -111,7 +111,7 @@ main (int argc, char *argv[])
   // and can be read by the "tcpdump -r" command (use "-tt" option to
   // display timestamps correctly)
   //
-  csma.EnablePcapAll ("csma-ats-bridge", false);
+  p2p.EnablePcapAll ("p2p-bridge", false);
 
   //
   // Now, do the actual simulation.

@@ -9,11 +9,12 @@
 def build(bld):
     module = bld.create_ns3_module('ats-bridge', ['core'])
     module.source = [
-        'model/ats-bridge.cc',
-        'helper/ats-bridge-helper.cc',
+        'model/ats-bridge-net-device.cc',
         'model/ats-transmission-queue-disc.cc',
         'model/ats-scheduler-queue-disc.cc',
         'model/ats-scheduler-group.cc',
+        'model/mac-queue-disc-item.cc',
+        'helper/ats-bridge-helper.cc',
         ]
 
     module_test = bld.create_ns3_module_test_library('ats-bridge')
@@ -24,9 +25,15 @@ def build(bld):
     headers = bld(features='ns3header')
     headers.module = 'ats-bridge'
     headers.source = [
-        'model/ats-bridge.h',
-        'helper/ats-bridge-helper.h',
+        'model/ats-bridge-net-device.h',
         'model/ats-transmission-queue-disc.h',
         'model/ats-scheduler-queue-disc.h',
         'model/ats-scheduler-group.h',
+        'model/mac-queue-disc-item.h',
+        'helper/ats-bridge-helper.h',
         ]
+
+    if bld.env['ENABLE_EXAMPLES']:
+        bld.recurse('examples')
+
+    bld.ns3_python_bindings()
