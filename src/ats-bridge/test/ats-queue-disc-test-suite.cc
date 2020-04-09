@@ -248,10 +248,7 @@ AtsQueueDiscTestCase::DoRun (void)
   leaf->Initialize ();  
   ATSroot->Initialize ();
 
-  //Set leaf callback to enqueue packets in transmission queue
-  leaf->SetSendCallback ([ATSroot] (Ptr<QueueDiscItem> item)
-                          {ATSroot->Enqueue (item);});
-  leaf->SetTransmissionQueue (ATSroot);
+
 
   
   
@@ -412,12 +409,7 @@ AtsQueueDiscTestCase::DoRun (void)
    
   ATSroot->Initialize ();
 
-  leaf1->SetSendCallback ([ATSroot] (Ptr<QueueDiscItem> item)
-                          {ATSroot->Enqueue (item);});
-  leaf1->SetTransmissionQueue (ATSroot); 
-  leaf2->SetSendCallback ([ATSroot] (Ptr<QueueDiscItem> item)
-                          {ATSroot->Enqueue (item);});
-  leaf2->SetTransmissionQueue (ATSroot);                      
+                      
 
 
   filter->SetReturnValue (0);
@@ -560,15 +552,6 @@ AtsQueueDiscTestCase::DoRun (void)
    
   ATSroot->Initialize ();
 
-  leaf1->SetSendCallback ([ATSroot] (Ptr<QueueDiscItem> item)
-                          {ATSroot->Enqueue (item);});
-  leaf1->SetTransmissionQueue (ATSroot); 
-  leaf2->SetSendCallback ([ATSroot] (Ptr<QueueDiscItem> item)
-                          {ATSroot->Enqueue (item);});
-  leaf2->SetTransmissionQueue (ATSroot);
-  leaf3->SetSendCallback ([ATSroot] (Ptr<QueueDiscItem> item)
-                          {ATSroot->Enqueue (item);});
-  leaf3->SetTransmissionQueue (ATSroot); 
 
   filter->SetReturnValue (0);
 

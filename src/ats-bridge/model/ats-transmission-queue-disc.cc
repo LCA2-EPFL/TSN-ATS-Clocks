@@ -21,7 +21,7 @@
 #include "ns3/log.h"
 #include "ns3/drop-tail-queue.h"
 #include "ns3/simulator.h"
-
+#include "ats-scheduler-queue-disc.h"
 
 
 namespace ns3{
@@ -117,7 +117,26 @@ namespace ns3{
       NS_LOG_ERROR ("ATSTransmissionQueue needs at least 1 class");
       return false;
     }
+    else
+    {
+      // We set the transmission queue of ATSScheduler
+      for (uint32_t i = 0; i < GetNQueueDiscClasses (); i++)
+      {
+        Ptr<QueueDisc> disc = GetQueueDiscClass (i)->GetQueueDisc ();
+        Ptr <ATSSchedulerQueueDisc> scheduler = DynamicCast<ATSSchedulerQueueDisc> (disc) ;
 
+        if (scheduler == nullptr)
+        {
+          NS_ASSERT ("ATStransmission needs a ATSScheduler");
+          return false;
+        }
+        scheduler->SetTransmissionQueue (this);
+        scheduler->SetSendCallback ([this] (Ptr<QueueDiscItem> item)
+                          {this->Enqueue (item);});
+      }
+      
+    }
+  
     if (GetNInternalQueues () == 0)
     {
       // add a DropTail queue
