@@ -15,7 +15,7 @@
 #include "ns3/simple-net-device.h"
 #include "ns3/node-container.h"
 #include "ns3/simple-channel.h"
-
+#include "ns3/pointer.h"
 
 using namespace ns3;
 /**
@@ -187,6 +187,8 @@ AtsQueueDiscTestCase::DoRun (void)
   Address dst;
   uint32_t maxSize = 20;
 
+  group = CreateObject<ATSSchedulerGroup> ();
+  group->InsertNewGroup (Seconds (1000000000), Seconds (0));
 
   Ptr<ATSSchedulerQueueDisc> leaf = CreateObject<ATSSchedulerQueueDisc> ();
 
@@ -206,7 +208,10 @@ AtsQueueDiscTestCase::DoRun (void)
                         "Verify that we can set the attribute ProcessDelayMax"); 
   NS_TEST_ASSERT_MSG_EQ (leaf->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, maxSize))), true,
                          "Verify that we can set the attribute maxSize");
-  
+  NS_TEST_ASSERT_MSG_EQ (leaf->SetAttributeFailSafe ("Group", PointerValue (group)),true,
+                         "Verify that we can set the attribute Group");                       
+  NS_TEST_ASSERT_MSG_EQ (leaf->SetAttributeFailSafe ("GroupID", UintegerValue (0)),true,
+                         "Verify that we can set the attribute GroupID");
   
   /**Test 2: Create the following structure and tets simple enqueue/dequeue*/
   /**
@@ -240,19 +245,8 @@ AtsQueueDiscTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNQueueDiscClasses (), 1, "Root queue disc does not have 1 class");
   NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNPacketFilters (), 1, "There should be one paket filter");
   
-  //Create the group object which is shared by all the ATSScheduler that belong to the same group.
-  group = CreateObject<ATSSchedulerGroup> ();
-  group->InsertNewGroup (Seconds (1000000000), Seconds (0));
-  leaf->SetATSGroup (group, 0);
-
-  leaf->Initialize ();  
+  //ATSTransmissionQueue must be initialized first
   ATSroot->Initialize ();
-
-
-
-  
-  
- 
   Config::SetDefault ("ns3::QueueDisc::Quota", UintegerValue (5));
   NodeContainer nodesA;
   nodesA.Create (2);
@@ -328,6 +322,8 @@ AtsQueueDiscTestCase::DoRun (void)
   Ptr<ATSSchedulerQueueDisc> leaf1 = CreateObject<ATSSchedulerQueueDisc> ();
   Ptr<ATSSchedulerQueueDisc> leaf2 = CreateObject<ATSSchedulerQueueDisc> ();
   DataRate rate1 = DataRate ("50KB/s");
+  group = CreateObject<ATSSchedulerGroup> ();
+  group->InsertNewGroup (Seconds (1000000000), Seconds (0));
   NS_TEST_ASSERT_MSG_EQ (leaf1->SetAttributeFailSafe ("Burst",UintegerValue (burst)),true,
                         "Verify that we can set the attribute Burst");
   NS_TEST_ASSERT_MSG_EQ (leaf2->SetAttributeFailSafe ("Burst",UintegerValue (burst)),true,
@@ -360,7 +356,14 @@ AtsQueueDiscTestCase::DoRun (void)
                          "Verify that we can set the attribute maxSize");
   NS_TEST_ASSERT_MSG_EQ (leaf2->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, maxSize))), true,
                          "Verify that we can set the attribute maxSize");      
-      
+  NS_TEST_ASSERT_MSG_EQ (leaf1->SetAttributeFailSafe ("Group", PointerValue (group)),true,
+                         "Verify that we can set the attribute group");  
+  NS_TEST_ASSERT_MSG_EQ (leaf2->SetAttributeFailSafe ("Group", PointerValue (group)),true,
+                         "Verify that we can set the attribute group");                         
+  NS_TEST_ASSERT_MSG_EQ (leaf1->SetAttributeFailSafe ("GroupID", UintegerValue (0)),true,
+                         "Verify that we can set the attribute GroupID");
+  NS_TEST_ASSERT_MSG_EQ (leaf2->SetAttributeFailSafe ("GroupID", UintegerValue (0)),true,
+                         "Verify that we can set the attribute GroupID");
 
   ATSroot = CreateObject<ATSTransmissionQueueDisc> ();
 
@@ -380,13 +383,6 @@ AtsQueueDiscTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNQueueDiscClasses (), 2, "Root queue disc does not have 2 class");
   NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNPacketFilters (), 1, "There should be one paket filter");
   
-  group = CreateObject<ATSSchedulerGroup> ();
-  group->InsertNewGroup (Seconds (1000000000), Seconds (0));
-  leaf1->SetATSGroup (group, 0);
-  leaf2->SetATSGroup (group, 0);
-
-  leaf1->Initialize ();
-  leaf2->Initialize (); 
   Config::SetDefault ("ns3::QueueDisc::Quota", UintegerValue (5));
   NodeContainer nodesB;
   nodesB.Create (2);
@@ -408,9 +404,6 @@ AtsQueueDiscTestCase::DoRun (void)
   tcB->Initialize ();
    
   ATSroot->Initialize ();
-
-                      
-
 
   filter->SetReturnValue (0);
   AtsQueueDiscTestCase::Enqueue (dst, pktSize, ATSroot);
@@ -472,21 +465,22 @@ AtsQueueDiscTestCase::DoRun (void)
   uint32_t burst2 = 4000;
   uint32_t burst3 = 9000;
 
+  group = CreateObject<ATSSchedulerGroup> ();
+  group->InsertNewGroup (Seconds (10), Seconds (0));
+  group->InsertNewGroup (Seconds (10), Seconds (0));
+  
   NS_TEST_ASSERT_MSG_EQ (leaf1->SetAttributeFailSafe ("Burst",UintegerValue (burst1)),true,
                         "Verify that we can set the attribute Burst");
   NS_TEST_ASSERT_MSG_EQ (leaf2->SetAttributeFailSafe ("Burst",UintegerValue (burst2)),true,
                         "Verify that we can set the attribute Burst"); 
   NS_TEST_ASSERT_MSG_EQ (leaf3->SetAttributeFailSafe ("Burst",UintegerValue (burst3)),true,
                         "Verify that we can set the attribute Burst");
- 
   NS_TEST_ASSERT_MSG_EQ (leaf1->SetAttributeFailSafe ("Rate",DataRateValue (rate1)),true,
                         "Verify that we can set the attribute Rate");
   NS_TEST_ASSERT_MSG_EQ (leaf2->SetAttributeFailSafe ("Rate",DataRateValue (rate2)),true,
                         "Verify that we can set the attribute Rate");
   NS_TEST_ASSERT_MSG_EQ (leaf3->SetAttributeFailSafe ("Rate",DataRateValue (rate2)),true,
-                        "Verify that we can set the attribute Rate");
-  
-                        
+                        "Verify that we can set the attribute Rate");        
   NS_TEST_ASSERT_MSG_EQ (leaf1->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, maxSize))), true,
                          "Verify that we can set the attribute maxSize");
   NS_TEST_ASSERT_MSG_EQ (leaf2->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, maxSize))), true,
@@ -494,6 +488,18 @@ AtsQueueDiscTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (leaf3->SetAttributeFailSafe ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, maxSize))), true,
                          "Verify that we can set the attribute maxSize");
    
+  NS_TEST_ASSERT_MSG_EQ (leaf1->SetAttributeFailSafe ("Group", PointerValue (group)),true,
+                         "Verify that we can set the attribute group");  
+  NS_TEST_ASSERT_MSG_EQ (leaf2->SetAttributeFailSafe ("Group", PointerValue (group)),true,
+                         "Verify that we can set the attribute group");    
+  NS_TEST_ASSERT_MSG_EQ (leaf3->SetAttributeFailSafe ("Group", PointerValue (group)),true,
+                         "Verify that we can set the attribute group");                                             
+  NS_TEST_ASSERT_MSG_EQ (leaf1->SetAttributeFailSafe ("GroupID", UintegerValue (0)),true,
+                         "Verify that we can set the attribute GroupID");
+  NS_TEST_ASSERT_MSG_EQ (leaf2->SetAttributeFailSafe ("GroupID", UintegerValue (0)),true,
+                         "Verify that we can set the attribute GroupID");
+  NS_TEST_ASSERT_MSG_EQ (leaf3->SetAttributeFailSafe ("GroupID", UintegerValue (1)),true,
+                         "Verify that we can set the attribute GroupID");                       
 
   ATSroot = CreateObject<ATSTransmissionQueueDisc> ();
 
@@ -518,18 +524,6 @@ AtsQueueDiscTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNQueueDiscClasses (), 3, "Root queue disc does not have 3 class");
   NS_TEST_ASSERT_MSG_EQ (ATSroot->GetNPacketFilters (), 1, "There should be one paket filter");
   
-  group = CreateObject<ATSSchedulerGroup> ();
-
-  group->InsertNewGroup (Seconds (10), Seconds (0));
-  group->InsertNewGroup (Seconds (10), Seconds (0));
-  leaf1->SetATSGroup (group, 0);
-  leaf2->SetATSGroup (group, 0);
-  leaf3->SetATSGroup (group, 1);
-
-  leaf1->Initialize ();
-  leaf2->Initialize (); 
-  leaf3->Initialize ();
-
   Config::SetDefault ("ns3::QueueDisc::Quota", UintegerValue (5));
   NodeContainer nodesC;
   nodesC.Create (2);
@@ -549,7 +543,6 @@ AtsQueueDiscTestCase::DoRun (void)
   nodesC.Get (0)->AggregateObject (tcC);
   tcC->SetRootQueueDiscOnDevice (txDevC, ATSroot);
   tcC->Initialize ();
-   
   ATSroot->Initialize ();
 
 
