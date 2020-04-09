@@ -16,14 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
 #include "ats-scheduler-queue-disc.h"
 #include "ns3/log.h"
 #include "ns3/simulator.h"
 #include "ns3/packet.h"
 #include "ns3/nstime.h"
 #include "ns3/drop-tail-queue.h"
-
+#include "ns3/pointer.h"
 
 namespace ns3{
 
@@ -82,6 +81,11 @@ TypeId ATSSchedulerQueueDisc::GetTypeId (void)
                    MakeQueueSizeAccessor (&QueueDisc::SetMaxSize,
                                           &QueueDisc::GetMaxSize),
                    MakeQueueSizeChecker ())
+    .AddAttribute ("Group",
+                  "Pointer to the group that belongs this scheduler",
+                  PointerValue (0),
+                  MakePointerAccessor (&ATSSchedulerQueueDisc::m_group),
+                  MakePointerChecker<ATSSchedulerGroup> ())
    
   ;
 
@@ -325,6 +329,16 @@ ATSSchedulerQueueDisc::CheckConfig ()
       c->SetQueueDisc (qd);
       AddQueueDiscClass (c);
     }
+  if (m_group == nullptr)
+  {
+    NS_LOG_ERROR ("ATSScheduler needs a group");
+    return false;
+  }
+  if (m_transmissionQueue == nullptr)
+  {
+    NS_LOG_ERROR ("ATSScheduler needs a transmission queue");
+    return false;
+  }
   
   return true;
 }
