@@ -82,11 +82,15 @@ TypeId ATSSchedulerQueueDisc::GetTypeId (void)
                                           &QueueDisc::GetMaxSize),
                    MakeQueueSizeChecker ())
     .AddAttribute ("Group",
-                  "Pointer to the group that belongs this scheduler",
+                  "Pointer to the group table",
                   PointerValue (0),
                   MakePointerAccessor (&ATSSchedulerQueueDisc::m_group),
                   MakePointerChecker<ATSSchedulerGroup> ())
-   
+    .AddAttribute ("GroupID",
+                  "ID of the group it belongs",
+                  UintegerValue (0),
+                  MakeUintegerAccessor (&ATSSchedulerQueueDisc::m_SchedulerGroupId),
+                  MakeUintegerChecker<uint32_t> ())              
   ;
 
   return tid;
@@ -336,6 +340,7 @@ ATSSchedulerQueueDisc::CheckConfig ()
   }
   if (m_transmissionQueue == nullptr)
   {
+    //ATSTransmissionQueue must be initialized first
     NS_LOG_ERROR ("ATSScheduler needs a transmission queue");
     return false;
   }
