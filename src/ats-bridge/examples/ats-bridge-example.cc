@@ -7,6 +7,7 @@
 #include "ns3/csma-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/traffic-control-module.h"
+#include "ns3/gnuplot-helper.h"
 
 using namespace ns3;
 
@@ -34,7 +35,7 @@ main (int argc, char *argv[])
   csma.SetChannelAttribute ("DataRate", DataRateValue (5000000));
   csma.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (2)));
 
-  // Create the p2p links, from each terminal to the switch
+  // Create the csma links, from each terminal to the switch
 
   NetDeviceContainer terminalDevices;
   NetDeviceContainer switchDevices;
@@ -51,6 +52,26 @@ main (int argc, char *argv[])
   ATSBridgeHelper bridge;
   bridge.Install (switchNode, switchDevices);
 
+  //Set ATSSchedulerQueueDisc parameters
+  Ptr<ATSSchedulerGroup> group;
+  group = CreateObject<ATSSchedulerGroup> ();
+  group->InsertNewGroup (Seconds (10), Seconds (0));
+  Config::SetDefault ("ns3::ATSSchedulerQueueDisc::MaxSize", QueueSizeValue (QueueSize ("7000p")));
+  Config::SetDefault ("ns3::ATSSchedulerQueueDisc::Group", PointerValue (group));
+  Config::SetDefault ("ns3::ATSSchedulerQueueDisc::GroupID", UintegerValue (0));
+  Config::SetDefault ("ns3::ATSSchedulerQueueDisc::Burst", UintegerValue (500));
+
+  //Create filter
+  
+  TrafficControlHelper tcATS;
+  uint16_t handle = tcATS.SetRootQueueDisc ("ns3::ATSTransmissionQueueDisc");
+  tcATS.AddPacketFilter (handle, "ns3::ATSQueueDiscFilter");
+  TrafficControlHelper::ClassIdList cid = tcATS.AddQueueDiscClasses (handle, 3, "ns3::QueueDiscClass");
+  tcATS.AddChildQueueDisc (handle, cid[0], "ns3::ATSSchedulerQueueDisc");
+  tcATS.AddChildQueueDisc (handle, cid[1], "ns3::ATSSchedulerQueueDisc");
+  tcATS.AddChildQueueDisc (handle, cid[2], "ns3::ATSSchedulerQueueDisc");
+  tcATS.Install (switchDevices.Get (3));
+
   // Add internet stack to the terminals
   InternetStackHelper internet;
   internet.Install (terminals);
@@ -63,46 +84,38 @@ main (int argc, char *argv[])
   ipv4.Assign (terminalDevices);
 
   //
-  // Create an OnOff application to send UDP datagrams from node zero to node 1.
+  // Create an OnOff application to send UDP datagrams from node zero to node 4.
   //
   NS_LOG_INFO ("Create Applications.");
   uint16_t port = 9;   // Discard port (RFC 863)
 
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
-                     Address (InetSocketAddress (Ipv4Address ("10.1.1.2"), port)));
-  onoff.SetConstantRate (DataRate ("500kb/s"));
-
+                     Address (InetSocketAddress (Ipv4Address ("10.1.1.4"), port)));
+  onoff.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
+  onoff.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
+  onoff.SetAttribute ("DataRate", DataRateValue (DataRate ("150KB/s")));
   ApplicationContainer app = onoff.Install (terminals.Get (0));
   // Start the application
   app.Start (Seconds (1.0));
-  app.Stop (Seconds (2.0));
+  app.Stop (Seconds (5.0));
+  app = onoff.Install (terminals.Get (1));
+  app.Start (Seconds (1.0));
+  app.Stop (Seconds (5.0));
+  app = onoff.Install (terminals.Get (2));
+  app.Start (Seconds (1.0));
+  app.Stop (Seconds (5.0));
 
   // Create an optional packet sink to receive these packets
   PacketSinkHelper sink ("ns3::UdpSocketFactory",
-                         Address (InetSocketAddress (Ipv4Address::GetAny (), port)));
-  app = sink.Install (terminals.Get (1));
+                         Address (InetSocketAddress (Ipv4Address ("10.1.1.4"), port)));
+  app = sink.Install (terminals.Get (3));
   app.Start (Seconds (0.0));
-
-  // 
-  // Create a similar flow from n3 to n0, starting at time 1.1 seconds
-  //
-  onoff.SetAttribute ("Remote", 
-                      AddressValue (InetSocketAddress (Ipv4Address ("10.1.1.1"), port)));
-  app = onoff.Install (terminals.Get (3));
-  app.Start (Seconds (1.1));
-  app.Stop (Seconds (2.0));
-
-  app = sink.Install (terminals.Get (0));
-  app.Start (Seconds (0.0));
-
-  NS_LOG_INFO ("Configure Tracing.");
-
   //
   // Configure tracing of all enqueue, dequeue, and NetDevice receive events.
   // Trace output will be sent to the file "csma-bridge.tr"
   //
   AsciiTraceHelper ascii;
-  csma.EnableAsciiAll (ascii.CreateFileStream ("csma-ats-bridge.tr"));
+  csma.EnableAsciiAll (ascii.CreateFileStream ("csma-bridge.tr"));
 
   //
   // Also configure some tcpdump traces; each interface will be traced.
@@ -112,6 +125,22 @@ main (int argc, char *argv[])
   // display timestamps correctly)
   //
   csma.EnablePcapAll ("csma-ats-bridge", false);
+
+  GnuplotHelper plotHelper;
+  plotHelper.ConfigurePlot ("Switch",
+                           "Packet Byte Count vs. Time",
+                           "Time (Seconds)",
+                          "Packet Byte Count");
+
+   std::string probeType;
+  std::string tracePath;
+  probeType = "ns3::PacketProbe";
+  tracePath = "/NodeList/4/$ns3::TrafficControlLayer/RootQueueDiscList/*/Enqueue";
+  plotHelper.PlotProbe (probeType,
+                        tracePath,
+                        "OutputBytes",
+                        "Packet Byte Count",
+                        GnuplotAggregator::KEY_BELOW);
 
   //
   // Now, do the actual simulation.

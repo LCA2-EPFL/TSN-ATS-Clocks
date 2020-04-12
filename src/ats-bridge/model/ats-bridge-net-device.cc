@@ -50,7 +50,16 @@ uint16_t protocol, Mac48Address src, Mac48Address dst)
   if (outPort != NULL && outPort != incomingPort)
     {
       NS_LOG_LOGIC ("Learning bridge state says to use port `" << outPort->GetInstanceTypeId ().GetName () << "'");
-      tc->Send (outPort, item);
+      if (protocol == 2054)
+        {
+          NS_LOG_DEBUG ("ARP");
+          outPort->SendFrom (packet->Copy (), src, dst, protocol);
+        }
+        else
+        {
+          NS_LOG_DEBUG ("Enqueue traffic control layer");
+          tc->Send (outPort, item);
+        }
     }
   else
   {
@@ -65,7 +74,16 @@ uint16_t protocol, Mac48Address src, Mac48Address dst)
                                                     << incomingPort->GetInstanceTypeId ().GetName ()
                                                     << " --> " << port->GetInstanceTypeId ().GetName ()
                                                     << " (UID " << packet->GetUid () << ").");
-            tc->Send (port, item);
+            if (protocol == 2054)
+            {
+              NS_LOG_DEBUG ("ARP");
+              port->SendFrom (packet->Copy (), src, dst, protocol);
+            }
+            else
+            {
+              NS_LOG_DEBUG ("Enqueue traffic control layer");
+              tc->Send (port, item);
+            }
           }
     }
   }
@@ -94,7 +112,16 @@ ATSBridgeNetDevice::ForwardBroadcast (Ptr<NetDevice> incomingPort, Ptr<const Pac
                                                 << incomingPort->GetInstanceTypeId ().GetName ()
                                                 << " --> " << port->GetInstanceTypeId ().GetName ()
                                                 << " (UID " << packet->GetUid () << ").");
-        tc->Send (port, item);
+        if (protocol == 2054)
+            {
+              NS_LOG_DEBUG ("ARP");
+              port->SendFrom (packet->Copy (), src, dst, protocol);
+            }
+            else
+            {
+              NS_LOG_DEBUG ("Enqueue traffic control layer");
+              tc->Send (port, item);
+            }
       }
   }
 }
