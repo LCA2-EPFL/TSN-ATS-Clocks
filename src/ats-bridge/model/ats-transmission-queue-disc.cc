@@ -65,20 +65,28 @@ namespace ns3{
    
     if(m_state == TransmissionQueueState::STREAM_FILTERING)
     {
-      NS_LOG_DEBUG ("Strem filtering state");
-      // Classify with an stream filter classifier
-      int32_t ret = Classify (item);
-      NS_LOG_DEBUG ("Classifier return value: " << ret);
-
-      if (ret==PacketFilter::PF_NO_MATCH)
+      if (GetNPacketFilters () == 0)
       {
-        //Unable to classify the packet.
-        //TODO: drop packet
-        return false;
+        NS_LOG_LOGIC ("No packet filter");
+        retval = GetQueueDiscClass (0)->GetQueueDisc ()->Enqueue (item);
       }
       else
       {
-        retval = GetQueueDiscClass (ret)->GetQueueDisc ()->Enqueue (item);
+        NS_LOG_DEBUG ("Strem filtering state");
+        // Classify with an stream filter classifier
+        int32_t ret = Classify (item);
+        NS_LOG_DEBUG ("Classifier return value: " << ret);
+
+        if (ret==PacketFilter::PF_NO_MATCH)
+        {
+          //Unable to classify the packet.
+          DropBeforeEnqueue (item, "Not able to classify");
+          return false;
+        }
+        else
+        {
+          retval = GetQueueDiscClass (ret)->GetQueueDisc ()->Enqueue (item);
+        }
       }
     }
       

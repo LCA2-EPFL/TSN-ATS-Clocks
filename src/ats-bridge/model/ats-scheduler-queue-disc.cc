@@ -236,10 +236,11 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   NS_LOG_DEBUG ("Bucket Full Time " << bucketFullTime);
   NS_LOG_DEBUG ("Group Eligibility Time:" << groupElibilityTime);
   NS_LOG_DEBUG ("Eligibility Time " << eligibilityTime);
-  NS_LOG_DEBUG (Time::FromDouble (arrivalTime.GetNanoSeconds () +  (maxResidenceTime.GetSeconds () / 1.0E9), Time::S));
+  NS_LOG_DEBUG ("MaxResidenceTime " << maxResidenceTime);
+  NS_LOG_DEBUG ("Arrival Time + MaxResidenceTime " <<  (arrivalTime.GetNanoSeconds () +  (maxResidenceTime.GetNanoSeconds ())));
   
   
-  if (eligibilityTime <= Time::FromDouble (arrivalTime.GetNanoSeconds () +  (maxResidenceTime.GetSeconds () / 1.0E9), Time::S))
+  if (eligibilityTime <= arrivalTime.GetNanoSeconds () +  (maxResidenceTime.GetNanoSeconds ()))
   {
     //The frame is valid
     m_group->SetGroupElibilityTime (m_SchedulerGroupId,eligibilityTime);
@@ -280,9 +281,9 @@ ATSSchedulerQueueDisc::AssingAndProceed (Time eligibilityTime, Ptr<QueueDiscItem
   bool retval;
   retval = GetQueueDiscClass (0)->GetQueueDisc ()->Enqueue (item);
 
+
   //Schedule an event which will enqueue the item in the the transmission queue 
  
-  
   Simulator::Schedule (assignedEligibilityTime - Simulator::Now (), &ATSSchedulerQueueDisc::ReadyForTransmission, this);
   return retval;
 }
@@ -318,6 +319,7 @@ ATSSchedulerQueueDisc::CheckConfig ()
   if (GetNQueueDiscClasses () == 0)
     {
       // create a FIFO queue disc
+      NS_LOG_DEBUG ("Creating queue fifo disc class");
       ObjectFactory factory;
       factory.SetTypeId ("ns3::FifoQueueDisc");
       Ptr<QueueDisc> qd = factory.Create<QueueDisc> ();
@@ -328,7 +330,6 @@ ATSSchedulerQueueDisc::CheckConfig ()
           return false;
         }
       qd->Initialize ();
-
       Ptr<QueueDiscClass> c = CreateObject<QueueDiscClass> ();
       c->SetQueueDisc (qd);
       AddQueueDiscClass (c);
