@@ -60,7 +60,6 @@ namespace ns3 {
       Time maxResidenceTime;
       Time groupEligibilityTime;
     }m_params_t;
-    typedef std::pair<uint32_t,Parameter_T> m_GroupInfoPair;
     std::map <uint32_t,Parameter_T> m_groupTable;
     uint32_t m_NGroup;
 
