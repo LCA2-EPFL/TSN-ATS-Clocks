@@ -41,6 +41,10 @@ namespace ns3{
                    MakeQueueSizeAccessor (&QueueDisc::SetMaxSize,
                                           &QueueDisc::GetMaxSize),
                    MakeQueueSizeChecker ())
+    .AddTraceSource ("EnqueueTxTime",
+                     "Time of the last enqueue packet in the Tx queue",
+                     MakeTraceSourceAccessor (&ATSTransmissionQueueDisc::m_transmissionEnqueueTime),
+                     "ns3::Time::TracedCallback")
     ;
     
   return tid;
@@ -95,6 +99,7 @@ namespace ns3{
       NS_LOG_DEBUG ("Ready for transmission, enqueuing in internal queue");
       NS_LOG_DEBUG ("QUEUE tam: " << GetInternalQueue (0)->GetMaxSize ());
       retval = GetInternalQueue (0)->Enqueue (item);
+      m_transmissionEnqueueTime (Simulator::Now ());
       if (!retval)
       {
         NS_LOG_WARN ("Packet enqueue failed. Check the size of the internal queues");
