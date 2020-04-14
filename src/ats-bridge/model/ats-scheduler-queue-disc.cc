@@ -43,7 +43,7 @@ TypeId ATSSchedulerQueueDisc::GetTypeId (void)
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("Rate",
                    "Rate at which tokens enter the first bucket in bps or Bps.",
-                   DataRateValue (DataRate ("100KB/s")),
+                   DataRateValue (DataRate ("150KB/s")),
                    MakeDataRateAccessor (&ATSSchedulerQueueDisc::m_informationRate),
                    MakeDataRateChecker ())
     .AddAttribute ("ClockOffsetVariationMax",
@@ -90,7 +90,15 @@ TypeId ATSSchedulerQueueDisc::GetTypeId (void)
                   "ID of the group it belongs",
                   UintegerValue (0),
                   MakeUintegerAccessor (&ATSSchedulerQueueDisc::m_SchedulerGroupId),
-                  MakeUintegerChecker<uint32_t> ())              
+                  MakeUintegerChecker<uint32_t> ())      
+    .AddTraceSource ("ArrivalTimeScheduler",
+                     "Time of the arrival of the packet to ATSScheduler",
+                     MakeTraceSourceAccessor (&ATSSchedulerQueueDisc::m_arrivalTime),
+                     "ns3::Time::TracedCallback")
+    .AddTraceSource ("EligibilityTimeScheduler",
+                     "Dequeuing time of the packet",
+                     MakeTraceSourceAccessor (&ATSSchedulerQueueDisc::m_eligibilityDequeueTime),
+                     "ns3::Time::TracedCallback")                      
   ;
 
   return tid;
@@ -215,10 +223,11 @@ bool
 ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 {
   NS_LOG_FUNCTION (this << item);
-
+  
   Time maxResidenceTime;
   Time groupElibilityTime;
   Time arrivalTime = Simulator::Now ();
+  m_arrivalTime (Simulator::Now ());
 
   maxResidenceTime = m_group->GetMaxResidenceTime (m_SchedulerGroupId);
   groupElibilityTime = m_group->GetGroupElibilityTime (m_SchedulerGroupId);
@@ -229,7 +238,7 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   Time bucketFullTime = m_bucketEmptyTime + emptyToFullDuration;
   Time eligibilityTime = Max(Max (arrivalTime,schedulerEligibilityTime),groupElibilityTime);
   
-  NS_LOG_DEBUG ("Frame length: " << item->GetPacket()->GetSize ()*8 << "Information Rate: " << m_informationRate.GetBitRate ());
+  NS_LOG_DEBUG ("Frame length: " << item->GetPacket()->GetSize () << "Information Rate: " << m_informationRate.GetBitRate ()/8);
   NS_LOG_DEBUG ("LenthRecoveryDuration " << lenthRecoveryDuration);
   NS_LOG_DEBUG ("Empty to full Duration " << emptyToFullDuration);
   NS_LOG_DEBUG ("Scheduler Eligibility Time " << schedulerEligibilityTime);
@@ -292,6 +301,7 @@ Ptr<QueueDiscItem>
 ATSSchedulerQueueDisc::DoDequeue ()
 {
   NS_LOG_FUNCTION (this);
+  m_eligibilityDequeueTime (Simulator::Now ());
   //Dequeue a packet from the queue to place it in the transmission queue. 
   return GetQueueDiscClass (0)->GetQueueDisc ()->Dequeue ();
 }

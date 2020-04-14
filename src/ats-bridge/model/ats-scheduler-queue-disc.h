@@ -196,6 +196,8 @@ namespace ns3 {
 
       //ATS transmission Queue attach to this Scheduler
       Ptr<ATSTransmissionQueueDisc> m_transmissionQueue;
+      TracedCallback<Time> m_arrivalTime;   //!< Time of arrival of the packet to ATSScheduler
+      TracedCallback<Time> m_eligibilityDequeueTime;   //!< Dequeuing time of the packet
   }; 
 
 } //namespace ns3
