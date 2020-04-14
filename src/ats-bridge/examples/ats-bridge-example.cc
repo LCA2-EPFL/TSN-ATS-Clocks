@@ -59,7 +59,8 @@ main (int argc, char *argv[])
   Config::SetDefault ("ns3::ATSSchedulerQueueDisc::MaxSize", QueueSizeValue (QueueSize ("7000p")));
   Config::SetDefault ("ns3::ATSSchedulerQueueDisc::Group", PointerValue (group));
   Config::SetDefault ("ns3::ATSSchedulerQueueDisc::GroupID", UintegerValue (0));
-  Config::SetDefault ("ns3::ATSSchedulerQueueDisc::Burst", UintegerValue (500));
+  Config::SetDefault ("ns3::ATSSchedulerQueueDisc::Burst", UintegerValue (540));
+  
 
   //Create filter
   
@@ -92,31 +93,34 @@ main (int argc, char *argv[])
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
                      Address (InetSocketAddress (Ipv4Address ("10.1.1.4"), port)));
   onoff.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
-  onoff.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=3]"));
+  onoff.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
   onoff.SetAttribute ("DataRate", DataRateValue (DataRate ("150KB/s")));
   ApplicationContainer app = onoff.Install (terminals.Get (0));
-  // Start the application
   app.Start (Seconds (1.0));
-  app.Stop (Seconds (20.0));
-  app = onoff.Install (terminals.Get (1));
-  app.Start (Seconds (1.0));
-  app.Stop (Seconds (10.0));
-  app = onoff.Install (terminals.Get (2));
-  app.Start (Seconds (1.0));
-  app.Stop (Seconds (10.0));
+  app.Stop (Seconds (1.05));
 
+ OnOffHelper onoff1 ("ns3::UdpSocketFactory", 
+                     Address (InetSocketAddress (Ipv4Address ("10.1.1.2"), port)));
+  onoff1.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
+  onoff1.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
+  onoff1.SetAttribute ("DataRate", DataRateValue (DataRate ("50KB/s")));
+  app = onoff1.Install (terminals.Get (0));
+  app.Start (Seconds (1.0));
+  app.Stop (Seconds (1.05));
+  
   // Create an optional packet sink to receive these packets
   PacketSinkHelper sink ("ns3::UdpSocketFactory",
                          Address (InetSocketAddress (Ipv4Address ("10.1.1.4"), port)));
   app = sink.Install (terminals.Get (3));
   app.Start (Seconds (0.0));
+
   //
   // Configure tracing of all enqueue, dequeue, and NetDevice receive events.
   // Trace output will be sent to the file "csma-bridge.tr"
   //
   AsciiTraceHelper ascii;
-  csma.EnableAsciiAll (ascii.CreateFileStream ("csma-ats.tr"));
-  csma.EnableAscii (ascii.CreateFileStream ("csma-ats-switch.tr"), switchDevices.Get (3));
+  //csma.EnableAsciiAll (ascii.CreateFileStream ("csma-ats.tr"));
+  csma.EnableAscii (ascii.CreateFileStream ("csma-ats-port.tr"), switchDevices.Get (3));
   //
   // Also configure some tcpdump traces; each interface will be traced.
   // The output files will be named:
@@ -124,9 +128,67 @@ main (int argc, char *argv[])
   // and can be read by the "tcpdump -r" command (use "-tt" option to
   // display timestamps correctly)
   //
-  csma.EnablePcapAll ("csma-bridge.tr", false);
-  csma.EnablePcap ("csma-bridge-switch.tr", switchDevices.Get (3));
+  csma.EnablePcapAll ("csma-bridge", false);
   
+  //Enable pcap for node 0 Arrival packet to tx queue of the device.
+  PcapHelper pcaphelper;
+  Ptr<PcapFileWrapper> file = pcaphelper.CreateFile ("Source-packet-transmitted-Enqueue", std::ios::out, PcapHelper::DLT_EN10MB);
+  Ptr<CsmaNetDevice> csmaDevice0 = terminalDevices.Get (0)->GetObject<CsmaNetDevice> ();
+  Ptr<Queue<Packet> > queue = csmaDevice0->GetQueue ();
+  
+  pcaphelper.HookDefaultSink <Queue<Packet>> (queue, "Enqueue", file);
+  Ptr<PcapFileWrapper> file1 = pcaphelper.CreateFile ("Source-packet-transmitted-Dequeue", std::ios::out, PcapHelper::DLT_EN10MB);
+  
+  pcaphelper.HookDefaultSink <Queue<Packet>> (queue, "Dequeue", file1);
+  
+  std::string probeType = "ns3::PacketProbe";
+  std::string tracePath = "/NodeList/0/DeviceList/0/TxQueue/Enqueue";
+  GnuplotHelper gnuHelper;
+  gnuHelper.ConfigurePlot ("Source-1-flows-Enqueue",
+                            "Packet arrival time",
+                            "Time (seconds)",
+                            "Packet Byte");
+  gnuHelper.PlotProbe (probeType,
+                        tracePath,
+                        "OutputBytes",
+                        "Packet Byte Count",
+                        GnuplotAggregator::KEY_BELOW);      
+  tracePath = "/NodeList/0/DeviceList/0/TxQueue/Enqueue";
+  gnuHelper.ConfigurePlot ("Source-2-flows-Enqueue",
+                            "Packet arrival time",
+                            "Time (seconds)",
+                            "Packet Byte");                          
+  gnuHelper.PlotProbe (probeType,
+                        tracePath,
+                        "OutputBytes",
+                        "Packet Byte Count",
+                        GnuplotAggregator::KEY_BELOW);
+  //Time plots
+  tracePath = "/NodeList/4/$ns3::TrafficControlLayer/RootQueueDiscList/*/QueueDiscClassList/*/QueueDisc/EligibilityTimeScheduler";
+  probeType = "ns3::TimeProbe";
+  gnuHelper.ConfigurePlot ("ElibilityTimeDequeuing",
+                            "ElibilityTime",
+                            "Time (seconds)",
+                            "Time"); 
+                                              
+  gnuHelper.PlotProbe (probeType,
+                      tracePath,
+                      "Output",
+                      "Packet Time",
+                      GnuplotAggregator::NO_KEY);
+
+  tracePath = "/NodeList/4/$ns3::TrafficControlLayer/RootQueueDiscList/*/QueueDiscClassList/*/QueueDisc/ArrivalTimeScheduler";
+  gnuHelper.ConfigurePlot ("ArrivalTimeToScheduler",
+                            "Packet arrival time",
+                            "Time (seconds)",
+                            "Time");  
+                                                  
+  gnuHelper.PlotProbe (probeType,
+                      tracePath,
+                      "Output",
+                      "Time",
+                      GnuplotAggregator::KEY_BELOW);
+                                          
   //
   // Now, do the actual simulation.
   //
