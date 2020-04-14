@@ -97,10 +97,9 @@ private:
   /**
    * \brief Method to connect to an underlying ns3::TraceSource of type Time 
    *
-   * \param oldData previous value of the Time 
    * \param newData new value of the Time 
    */
-  void TraceSink (Time oldData, Time newData);
+  void TraceSink (Time newData);
 
   TracedValue<double> m_output; //!< Output trace source.
 };

@@ -101,9 +101,9 @@ TimeProbe::ConnectByPath (std::string path)
 }
 
 void
-TimeProbe::TraceSink (Time oldData, Time newData)
+TimeProbe::TraceSink (Time newData)
 {
-  NS_LOG_FUNCTION (this << oldData.GetSeconds () << newData.GetSeconds ());
+  NS_LOG_FUNCTION (this << newData.GetSeconds ());
   if (IsEnabled ())
     {
       m_output = newData.GetSeconds ();
