@@ -92,18 +92,18 @@ main (int argc, char *argv[])
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
                      Address (InetSocketAddress (Ipv4Address ("10.1.1.4"), port)));
   onoff.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
-  onoff.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
+  onoff.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=3]"));
   onoff.SetAttribute ("DataRate", DataRateValue (DataRate ("150KB/s")));
   ApplicationContainer app = onoff.Install (terminals.Get (0));
   // Start the application
   app.Start (Seconds (1.0));
-  app.Stop (Seconds (5.0));
+  app.Stop (Seconds (20.0));
   app = onoff.Install (terminals.Get (1));
   app.Start (Seconds (1.0));
-  app.Stop (Seconds (5.0));
+  app.Stop (Seconds (10.0));
   app = onoff.Install (terminals.Get (2));
   app.Start (Seconds (1.0));
-  app.Stop (Seconds (5.0));
+  app.Stop (Seconds (10.0));
 
   // Create an optional packet sink to receive these packets
   PacketSinkHelper sink ("ns3::UdpSocketFactory",
@@ -115,8 +115,8 @@ main (int argc, char *argv[])
   // Trace output will be sent to the file "csma-bridge.tr"
   //
   AsciiTraceHelper ascii;
-  csma.EnableAsciiAll (ascii.CreateFileStream ("csma-bridge.tr"));
-
+  csma.EnableAsciiAll (ascii.CreateFileStream ("csma-ats.tr"));
+  csma.EnableAscii (ascii.CreateFileStream ("csma-ats-switch.tr"), switchDevices.Get (3));
   //
   // Also configure some tcpdump traces; each interface will be traced.
   // The output files will be named:
@@ -124,24 +124,9 @@ main (int argc, char *argv[])
   // and can be read by the "tcpdump -r" command (use "-tt" option to
   // display timestamps correctly)
   //
-  csma.EnablePcapAll ("csma-ats-bridge", false);
-
-  GnuplotHelper plotHelper;
-  plotHelper.ConfigurePlot ("Switch",
-                           "Packet Byte Count vs. Time",
-                           "Time (Seconds)",
-                          "Packet Byte Count");
-
-   std::string probeType;
-  std::string tracePath;
-  probeType = "ns3::PacketProbe";
-  tracePath = "/NodeList/4/$ns3::TrafficControlLayer/RootQueueDiscList/*/Enqueue";
-  plotHelper.PlotProbe (probeType,
-                        tracePath,
-                        "OutputBytes",
-                        "Packet Byte Count",
-                        GnuplotAggregator::KEY_BELOW);
-
+  csma.EnablePcapAll ("csma-bridge.tr", false);
+  csma.EnablePcap ("csma-bridge-switch.tr", switchDevices.Get (3));
+  
   //
   // Now, do the actual simulation.
   //

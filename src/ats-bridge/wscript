@@ -11,6 +11,7 @@ def build(bld):
     module.source = [
         'model/ats-bridge-net-device.cc',
         'model/ats-transmission-queue-disc.cc',
+        'model/ats-queue-disc-filter.cc',
         'model/ats-scheduler-queue-disc.cc',
         'model/ats-scheduler-group.cc',
         'model/mac-queue-disc-item.cc',
@@ -28,6 +29,7 @@ def build(bld):
         'model/ats-bridge-net-device.h',
         'model/ats-transmission-queue-disc.h',
         'model/ats-scheduler-queue-disc.h',
+        'model/ats-queue-disc-filter.h',
         'model/ats-scheduler-group.h',
         'model/mac-queue-disc-item.h',
         'helper/ats-bridge-helper.h',
