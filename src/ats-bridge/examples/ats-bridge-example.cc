@@ -60,7 +60,7 @@ main (int argc, char *argv[])
   Config::SetDefault ("ns3::ATSSchedulerQueueDisc::Group", PointerValue (group));
   Config::SetDefault ("ns3::ATSSchedulerQueueDisc::GroupID", UintegerValue (0));
   Config::SetDefault ("ns3::ATSSchedulerQueueDisc::Burst", UintegerValue (540));
-  
+  Config::SetDefault ("ns3::ATSSchedulerQueueDisc::Rate", DataRateValue (DataRate ("10KB/s")));
 
   //Create filter
   
@@ -94,19 +94,28 @@ main (int argc, char *argv[])
                      Address (InetSocketAddress (Ipv4Address ("10.1.1.4"), port)));
   onoff.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
   onoff.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
-  onoff.SetAttribute ("DataRate", DataRateValue (DataRate ("150KB/s")));
+  onoff.SetAttribute ("DataRate", DataRateValue (DataRate ("10KB/s")));
   ApplicationContainer app = onoff.Install (terminals.Get (0));
   app.Start (Seconds (1.0));
-  app.Stop (Seconds (1.05));
+  app.Stop (Seconds (1.9));
 
- OnOffHelper onoff1 ("ns3::UdpSocketFactory", 
+  OnOffHelper onoff1 ("ns3::UdpSocketFactory", 
                      Address (InetSocketAddress (Ipv4Address ("10.1.1.2"), port)));
   onoff1.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
   onoff1.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
-  onoff1.SetAttribute ("DataRate", DataRateValue (DataRate ("50KB/s")));
+  onoff1.SetAttribute ("DataRate", DataRateValue (DataRate ("200KB/s")));
   app = onoff1.Install (terminals.Get (0));
   app.Start (Seconds (1.0));
-  app.Stop (Seconds (1.05));
+  app.Stop (Seconds (1.4));
+
+  OnOffHelper onoff2 ("ns3::UdpSocketFactory", 
+                     Address (InetSocketAddress (Ipv4Address ("10.1.1.2"), port)));
+  onoff2.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
+  onoff2.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
+  onoff2.SetAttribute ("DataRate", DataRateValue (DataRate ("200KB/s")));
+  app = onoff2.Install (terminals.Get (0));
+  app.Start (Seconds (1.0));
+  app.Stop (Seconds (1.4));
   
   // Create an optional packet sink to receive these packets
   PacketSinkHelper sink ("ns3::UdpSocketFactory",
@@ -153,8 +162,8 @@ main (int argc, char *argv[])
                         "OutputBytes",
                         "Packet Byte Count",
                         GnuplotAggregator::KEY_BELOW);      
-  tracePath = "/NodeList/0/DeviceList/0/TxQueue/Enqueue";
-  gnuHelper.ConfigurePlot ("Source-2-flows-Enqueue",
+  tracePath = "/NodeList/0/DeviceList/0/TxQueue/Dequeue";
+  gnuHelper.ConfigurePlot ("Source-1-flows-Dequeue",
                             "Packet arrival time",
                             "Time (seconds)",
                             "Packet Byte");                          
@@ -163,11 +172,21 @@ main (int argc, char *argv[])
                         "OutputBytes",
                         "Packet Byte Count",
                         GnuplotAggregator::KEY_BELOW);
+  tracePath = "/NodeList/3/DeviceList/0/MacRx";
+  gnuHelper.ConfigurePlot ("ConsumerReceive",
+                            "Packet arrival time",
+                            "Time (seconds)",
+                            "Packet Byte");                          
+  gnuHelper.PlotProbe (probeType,
+                        tracePath,
+                        "OutputBytes",
+                        "Packet Byte Count",
+                        GnuplotAggregator::KEY_BELOW);                      
   //Time plots
-  tracePath = "/NodeList/4/$ns3::TrafficControlLayer/RootQueueDiscList/*/QueueDiscClassList/*/QueueDisc/EligibilityTimeScheduler";
+  tracePath = "/NodeList/4/$ns3::TrafficControlLayer/RootQueueDiscList/*/DequeueTxTime";
   probeType = "ns3::TimeProbe";
-  gnuHelper.ConfigurePlot ("ElibilityTimeDequeuing",
-                            "ElibilityTime",
+  gnuHelper.ConfigurePlot ("Dequeue-from-transmission-queue",
+                            "Dequeue time",
                             "Time (seconds)",
                             "Time"); 
                                               
@@ -176,6 +195,18 @@ main (int argc, char *argv[])
                       "Output",
                       "Packet Time",
                       GnuplotAggregator::NO_KEY);
+
+  tracePath = "/NodeList/4/$ns3::TrafficControlLayer/RootQueueDiscList/*/QueueDiscClassList/*/QueueDisc/EligibilityTimeScheduler";
+  gnuHelper.ConfigurePlot ("ElibilityTimeDequeue",
+                            "Packet arrival time",
+                            "Time (seconds)",
+                            "Time");  
+                                                  
+  gnuHelper.PlotProbe (probeType,
+                      tracePath,
+                      "Output",
+                      "Time",
+                      GnuplotAggregator::KEY_BELOW);
 
   tracePath = "/NodeList/4/$ns3::TrafficControlLayer/RootQueueDiscList/*/QueueDiscClassList/*/QueueDisc/ArrivalTimeScheduler";
   gnuHelper.ConfigurePlot ("ArrivalTimeToScheduler",
@@ -188,7 +219,7 @@ main (int argc, char *argv[])
                       "Output",
                       "Time",
                       GnuplotAggregator::KEY_BELOW);
-                                          
+                                                                                  
   //
   // Now, do the actual simulation.
   //
