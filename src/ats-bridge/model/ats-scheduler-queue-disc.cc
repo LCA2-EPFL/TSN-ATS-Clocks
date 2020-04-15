@@ -43,7 +43,7 @@ TypeId ATSSchedulerQueueDisc::GetTypeId (void)
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("Rate",
                    "Rate at which tokens enter the first bucket in bps or Bps.",
-                   DataRateValue (DataRate ("150KB/s")),
+                   DataRateValue (DataRate ("100KB/s")),
                    MakeDataRateAccessor (&ATSSchedulerQueueDisc::m_informationRate),
                    MakeDataRateChecker ())
     .AddAttribute ("ClockOffsetVariationMax",
