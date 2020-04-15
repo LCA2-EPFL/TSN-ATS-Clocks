@@ -41,9 +41,9 @@ namespace ns3{
                    MakeQueueSizeAccessor (&QueueDisc::SetMaxSize,
                                           &QueueDisc::GetMaxSize),
                    MakeQueueSizeChecker ())
-    .AddTraceSource ("EnqueueTxTime",
-                     "Time of the last enqueue packet in the Tx queue",
-                     MakeTraceSourceAccessor (&ATSTransmissionQueueDisc::m_transmissionEnqueueTime),
+    .AddTraceSource ("DequeueTxTime",
+                     "Time of  dequeue of last  packet in the Tx queue",
+                     MakeTraceSourceAccessor (&ATSTransmissionQueueDisc::m_transmissionDequeueTime),
                      "ns3::Time::TracedCallback")
     ;
     
@@ -99,11 +99,12 @@ namespace ns3{
       NS_LOG_DEBUG ("Ready for transmission, enqueuing in internal queue");
       NS_LOG_DEBUG ("QUEUE tam: " << GetInternalQueue (0)->GetMaxSize ());
       retval = GetInternalQueue (0)->Enqueue (item);
-      m_transmissionEnqueueTime (Simulator::Now ());
       if (!retval)
       {
         NS_LOG_WARN ("Packet enqueue failed. Check the size of the internal queues");
       }
+      NS_LOG_DEBUG ("Packets inside the queue: " << GetInternalQueue (0)->GetNPackets ());
+      Simulator::ScheduleNow (&QueueDisc::Run,this);
       m_state = TransmissionQueueState::STREAM_FILTERING;
     }
 
@@ -118,6 +119,11 @@ namespace ns3{
 
     Ptr<QueueDiscItem> item;
     item = GetInternalQueue (0)->Dequeue ();
+    if (item!=0)
+    {
+      m_transmissionDequeueTime (Simulator::Now ());
+    }
+    NS_LOG_DEBUG ("Packets inside the queue: " << GetInternalQueue (0)->GetNPackets ());
     return item;
   }
   

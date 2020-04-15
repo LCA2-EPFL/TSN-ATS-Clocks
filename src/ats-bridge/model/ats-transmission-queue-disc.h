@@ -78,7 +78,7 @@ namespace ns3 {
       virtual void InitializeParams (void);
 
       TransmissionQueueState m_state; //Queue state 
-      TracedCallback<Time> m_transmissionEnqueueTime;   //!< Time of the last enqueue packet in the Tx queue
+      TracedCallback<Time> m_transmissionDequeueTime;   //!< Time of  dequeue of last  packet in the Tx queue
   }; 
 } //namespace ns3
 

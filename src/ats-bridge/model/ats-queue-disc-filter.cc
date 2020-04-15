@@ -13,7 +13,6 @@ ATSQueueDiscFilter::GetTypeId (void)
     .SetGroupName("ATSBridge")
     .AddConstructor<ATSQueueDiscFilter> ()
     ;
-
   return tid;
 }
 
