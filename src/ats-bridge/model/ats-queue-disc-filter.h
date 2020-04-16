@@ -24,6 +24,7 @@ namespace ns3{
       Ipv4Address dst;
       Mac48Address macSrc;
       Mac48Address macDst;
+      uint16_t dstport;
     };
     std::map<int32_t, tuple> m_streamFilter;
   };

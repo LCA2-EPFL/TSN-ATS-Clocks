@@ -1,5 +1,6 @@
 #include "ats-queue-disc-filter.h"
 #include "ns3/log.h"
+#include "ns3/udp-header.h"
 
 namespace ns3{
 
@@ -24,14 +25,13 @@ ATSQueueDiscFilter::ATSQueueDiscFilter ()
   m_streamFilter[0].dst = Ipv4Address ("10.1.1.4");
   m_streamFilter[0].macSrc = Mac48Address ("00:00:00:00:00:01");
   m_streamFilter[0].macDst = Mac48Address ("00:00:00:00:00:07");
-  m_streamFilter[1].src = Ipv4Address ("10.1.1.2");
+  m_streamFilter[0].dstport = 9;
+  m_streamFilter[1].src = Ipv4Address ("10.1.1.1");
   m_streamFilter[1].dst = Ipv4Address ("10.1.1.4");
-  m_streamFilter[1].macSrc = Mac48Address ("00:00:00:00:00:02");
+  m_streamFilter[1].macSrc = Mac48Address ("00:00:00:00:00:01");
   m_streamFilter[1].macDst = Mac48Address ("00:00:00:00:00:07");
-  m_streamFilter[2].src = Ipv4Address ("10.1.1.3");
-  m_streamFilter[2].dst = Ipv4Address ("10.1.1.4");
-  m_streamFilter[2].macSrc = Mac48Address ("00:00:00:00:00:03");
-  m_streamFilter[2].macDst = Mac48Address ("00:00:00:00:00:07");
+  m_streamFilter[1].dstport = 10;
+  
 }
 ATSQueueDiscFilter::~ATSQueueDiscFilter ()
 {
@@ -47,6 +47,13 @@ ATSQueueDiscFilter::DoClassify (Ptr<QueueDiscItem> item) const
   Ipv4Header ipHeader;
 
   p->RemoveHeader (ipHeader);
+  Ptr<Packet> pkt = p->Copy ();
+  UdpHeader udpHdr;
+  p->PeekHeader (udpHdr);
+  
+  NS_LOG_DEBUG ("PORT ----- " << udpHdr.GetDestinationPort ());
+
+  
  
   NS_LOG_DEBUG ("Packet Size " <<  ipHeader.GetPayloadSize () << "Packet Size " << p->GetSize () 
   << "Get protocol" << item->GetProtocol ());
@@ -54,19 +61,24 @@ ATSQueueDiscFilter::DoClassify (Ptr<QueueDiscItem> item) const
   int32_t ret = -1;
   Ipv4Address src = ipHeader.GetSource ();
   Ipv4Address dest = ipHeader.GetDestination ();
+  uint8_t prot = ipHeader.GetProtocol ();
   
-  NS_LOG_DEBUG ("dst :" << dest << "src :" << src << " " << item->GetAddress ());
+  NS_LOG_DEBUG ("dst :" << dest << "src :" << src << " " << item->GetAddress () << "protocol: " << prot);
   
-
+  
   for (auto const& pair : m_streamFilter)
   {
-    if (pair.second.dst == dest && pair.second.src == src)
+    if (pair.second.dst == dest && pair.second.src == src && pair.second.dstport == udpHdr.GetDestinationPort ())
     {
       ret = pair.first;
-      NS_LOG_DEBUG ("Filter Coincidence " << pair.second.dst << "and " << pair.second.src << 
-      "Return value " << ret);
+      
+      NS_LOG_DEBUG ("Filter Coincidence " << pair.second.dst << "and " 
+      << pair.second.src << "and port: " << pair.second.dstport << 
+      "Return value " << ret << "Protocol " << prot);
     }
   }
+  
+  
   p->AddHeader (ipHeader);
   return ret;
 }
