@@ -104,12 +104,11 @@ namespace ns3{
         NS_LOG_WARN ("Packet enqueue failed. Check the size of the internal queues");
       }
       NS_LOG_DEBUG ("Packets inside the queue: " << GetInternalQueue (0)->GetNPackets ());
-      Simulator::ScheduleNow (&QueueDisc::Run,this);
       m_state = TransmissionQueueState::STREAM_FILTERING;
+      Simulator::ScheduleNow (&QueueDisc::Run, this);
     }
 
     return retval;
-    
   }
 
   Ptr<QueueDiscItem>
@@ -124,6 +123,8 @@ namespace ns3{
       m_transmissionDequeueTime (Simulator::Now ());
     }
     NS_LOG_DEBUG ("Packets inside the queue: " << GetInternalQueue (0)->GetNPackets ());
+  
+    
     return item;
   }
   
