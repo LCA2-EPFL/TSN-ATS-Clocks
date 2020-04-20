@@ -195,7 +195,7 @@ void PacketSink::HandleRead (Ptr<Socket> socket)
                        << " total Rx " << m_totalRx << " bytes");
         }
       socket->GetSockName (localAddress);
-      m_rxTrace (packet, from);
+      m_rxTrace (packet);
       m_rxTraceWithAddresses (packet, from, localAddress);
     }
 }

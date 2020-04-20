@@ -131,7 +131,7 @@ private:
   TypeId          m_tid;          //!< Protocol TypeId
 
   /// Traced Callback: received packets, source address.
-  TracedCallback<Ptr<const Packet>, const Address &> m_rxTrace;
+  TracedCallback<Ptr<const Packet>> m_rxTrace;
 
   /// Callback for tracing the packet Rx events, includes source and destination addresses
   TracedCallback<Ptr<const Packet>, const Address &, const Address &> m_rxTraceWithAddresses;
