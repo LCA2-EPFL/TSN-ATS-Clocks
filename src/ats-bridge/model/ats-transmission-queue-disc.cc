@@ -22,6 +22,7 @@
 #include "ns3/drop-tail-queue.h"
 #include "ns3/simulator.h"
 #include "ats-scheduler-queue-disc.h"
+#include "ns3/net-device-queue-interface.h"
 
 
 namespace ns3{
@@ -66,6 +67,7 @@ namespace ns3{
   {
     NS_LOG_FUNCTION (this << item);
     bool retval = false;
+    
    
     if(m_state == TransmissionQueueState::STREAM_FILTERING)
     {
@@ -105,7 +107,10 @@ namespace ns3{
       }
       NS_LOG_DEBUG ("Packets inside the queue: " << GetInternalQueue (0)->GetNPackets ());
       m_state = TransmissionQueueState::STREAM_FILTERING;
-      Simulator::ScheduleNow (&QueueDisc::Run, this);
+      //Simulator::ScheduleNow (&QueueDisc::Run, this);
+      Ptr<NetDeviceQueueInterface> inter = GetNetDeviceQueueInterface ();
+      Ptr<NetDeviceQueue> devQ = inter-> GetTxQueue (0);
+      devQ-> Wake ();
     }
 
     return retval;
