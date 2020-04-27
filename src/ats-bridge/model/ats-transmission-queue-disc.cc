@@ -69,8 +69,7 @@ namespace ns3{
     bool retval = false;
     
    
-    if(m_state == TransmissionQueueState::STREAM_FILTERING)
-    {
+  
       if (GetNPacketFilters () == 0)
       {
         NS_LOG_LOGIC ("No packet filter");
@@ -94,25 +93,6 @@ namespace ns3{
           retval = GetQueueDiscClass (ret)->GetQueueDisc ()->Enqueue (item);
         }
       }
-    }
-      
-    if (m_state ==TransmissionQueueState::READY_FOR_TRANSMISSION)  
-    {
-      NS_LOG_DEBUG ("Ready for transmission, enqueuing in internal queue");
-      NS_LOG_DEBUG ("QUEUE tam: " << GetInternalQueue (0)->GetMaxSize ());
-      retval = GetInternalQueue (0)->Enqueue (item);
-      if (!retval)
-      {
-        NS_LOG_WARN ("Packet enqueue failed. Check the size of the internal queues");
-      }
-      NS_LOG_DEBUG ("Packets inside the queue: " << GetInternalQueue (0)->GetNPackets ());
-      m_state = TransmissionQueueState::STREAM_FILTERING;
-      //Simulator::ScheduleNow (&QueueDisc::Run, this);
-      Ptr<NetDeviceQueueInterface> inter = GetNetDeviceQueueInterface ();
-      Ptr<NetDeviceQueue> devQ = inter-> GetTxQueue (0);
-      devQ-> Wake ();
-    }
-
     return retval;
   }
 
@@ -122,12 +102,13 @@ namespace ns3{
     NS_LOG_FUNCTION (this);
 
     Ptr<QueueDiscItem> item;
-    item = GetInternalQueue (0)->Dequeue ();
+    item = m_internalQueue->Dequeue ();
+    
     if (item!=0)
     {
       m_transmissionDequeueTime (Simulator::Now ());
     }
-    NS_LOG_DEBUG ("Packets inside the queue: " << GetInternalQueue (0)->GetNPackets ());
+    NS_LOG_DEBUG ("Packets inside the queue: " << m_internalQueue->GetNPackets ());
   
     
     return item;
@@ -157,7 +138,7 @@ namespace ns3{
         }
         scheduler->SetTransmissionQueue (this);
         scheduler->SetSendCallback ([this] (Ptr<QueueDiscItem> item)
-                          {this->Enqueue (item);});
+                          {this->EnqueuePacket (item);});
       }
       
     }
@@ -165,8 +146,7 @@ namespace ns3{
     if (GetNInternalQueues () == 0)
     {
       // add a DropTail queue
-      AddInternalQueue (CreateObjectWithAttributes<DropTailQueue<QueueDiscItem> >
-                          ("MaxSize", QueueSizeValue (GetMaxSize ())));
+      m_internalQueue = CreateObjectWithAttributes<DropTailQueue<QueueDiscItem> >("MaxSize", QueueSizeValue (GetMaxSize ()));
     }
     return true;
   }
@@ -182,5 +162,19 @@ namespace ns3{
   {
     NS_LOG_FUNCTION (this);
     m_state = TransmissionQueueState::READY_FOR_TRANSMISSION;
+  }
+  void
+  ATSTransmissionQueueDisc::EnqueuePacket (Ptr<QueueDiscItem> item)
+  {
+    NS_LOG_DEBUG ("Ready for transmission, enqueuing in internal queue");
+    NS_LOG_DEBUG ("QUEUE tam: " << m_internalQueue->GetMaxSize ());
+    bool retval;
+    retval = m_internalQueue->Enqueue (item);
+    if (!retval)
+    {
+      NS_LOG_WARN ("Packet enqueue failed. Check the size of the internal queues");
+    }
+    NS_LOG_DEBUG ("Packets inside the queue: " << m_internalQueue->GetNPackets ());
+    
   }
 }

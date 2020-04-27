@@ -69,6 +69,7 @@ namespace ns3 {
       };
 
       void SetATSToTransmission ();      
+      void EnqueuePacket  (Ptr<QueueDiscItem> item);
       
     private:
 
@@ -79,6 +80,7 @@ namespace ns3 {
 
       TransmissionQueueState m_state; //Queue state 
       TracedCallback<Time> m_transmissionDequeueTime;   //!< Time of  dequeue of last  packet in the Tx queue
+      Ptr<Queue<QueueDiscItem>> m_internalQueue; 
   }; 
 } //namespace ns3
 

@@ -379,7 +379,7 @@ ATSSchedulerQueueDisc::ReadyForTransmission ()
   
   Ptr<QueueDiscItem> item = DoDequeue ();
   m_transmissionQueue->SetATSToTransmission ();
-  m_transmissionQueue->Enqueue (item);
+  m_transmissionQueue->EnqueuePacket (item);
 }
 
 void 
