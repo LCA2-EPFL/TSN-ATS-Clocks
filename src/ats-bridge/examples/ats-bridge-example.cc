@@ -8,6 +8,8 @@
 #include "ns3/internet-module.h"
 #include "ns3/traffic-control-module.h"
 #include "ns3/gnuplot-helper.h"
+#include "ns3/local-clock.h"
+#include "ns3/perfect-clock-model-impl.h"
 
 using namespace ns3;
 
@@ -16,6 +18,10 @@ NS_LOG_COMPONENT_DEFINE ("AtsBridgeExample");
 int 
 main (int argc, char *argv[])
 {
+   //Set LocalTime Simulator Impl
+  GlobalValue::Bind ("SimulatorImplementationType", 
+                     StringValue ("ns3::LocalTimeSimulatorImpl"));
+  
   bool verbose = true;
 
   CommandLine cmd;
@@ -25,10 +31,39 @@ main (int argc, char *argv[])
 
   NS_LOG_INFO ("Create nodes.");
   NodeContainer terminals;
-  terminals.Create (4);
+  terminals.Create (2);
 
   NodeContainer csmaSwitch;
   csmaSwitch.Create (1);
+
+  //Aggregate clock 
+
+  Ptr<PerfectClockModelImpl> clockImpl0 = CreateObject <PerfectClockModelImpl> ();
+  Ptr<PerfectClockModelImpl> clockImpl1 = CreateObject <PerfectClockModelImpl> ();
+  Ptr<PerfectClockModelImpl> clockImpl2 = CreateObject <PerfectClockModelImpl> ();
+
+  clockImpl0 -> SetAttribute ("Frequency", DoubleValue (1));
+  clockImpl1 -> SetAttribute ("Frequency", DoubleValue (1));
+  clockImpl2 -> SetAttribute ("Frequency", DoubleValue (1.1));
+
+  
+  Ptr<LocalClock> clock0 = CreateObject<LocalClock> ();
+  Ptr<LocalClock> clock1 = CreateObject<LocalClock> ();
+  Ptr<LocalClock> clock2 = CreateObject<LocalClock> ();
+
+  clock0 -> SetAttribute ("ClockModelImpl", PointerValue (clockImpl0));
+  clock1 -> SetAttribute ("ClockModelImpl", PointerValue (clockImpl1));
+  clock2 -> SetAttribute ("ClockModelImpl", PointerValue (clockImpl2));
+
+  Ptr<Node> source = terminals.Get (0);
+  Ptr<Node> consumer = terminals.Get (1);
+  Ptr<Node> switchATS = csmaSwitch.Get (0);
+
+  source -> AggregateObject (clock0);
+  consumer -> AggregateObject (clock1);
+  switchATS ->AggregateObject (clock2);
+
+
 
   NS_LOG_INFO ("Build Topology");
   CsmaHelper csma;
@@ -40,7 +75,7 @@ main (int argc, char *argv[])
   NetDeviceContainer terminalDevices;
   NetDeviceContainer switchDevices;
 
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 2; i++)
     {
       NetDeviceContainer link = csma.Install (NodeContainer (terminals.Get (i), csmaSwitch));
       terminalDevices.Add (link.Get (0));
@@ -68,10 +103,10 @@ main (int argc, char *argv[])
   uint16_t handle = tcATS.SetRootQueueDisc ("ns3::ATSTransmissionQueueDisc");
   tcATS.AddPacketFilter (handle, "ns3::ATSQueueDiscFilter");
   TrafficControlHelper::ClassIdList cid = tcATS.AddQueueDiscClasses (handle, 3, "ns3::QueueDiscClass");
-  tcATS.AddChildQueueDisc (handle, cid[0], "ns3::ATSSchedulerQueueDisc", "Rate", DataRateValue (DataRate ("80KB/s")));
-  tcATS.AddChildQueueDisc (handle, cid[1], "ns3::ATSSchedulerQueueDisc", "Rate", DataRateValue (DataRate ("80KB/s")));
+  tcATS.AddChildQueueDisc (handle, cid[0], "ns3::ATSSchedulerQueueDisc", "Rate", DataRateValue (DataRate ("84.7KB/s")));
+  tcATS.AddChildQueueDisc (handle, cid[1], "ns3::ATSSchedulerQueueDisc", "Rate", DataRateValue (DataRate ("84.7KB/s")));
   tcATS.AddChildQueueDisc (handle, cid[2], "ns3::ATSSchedulerQueueDisc");
-  tcATS.Install (switchDevices.Get (3));
+  tcATS.Install (switchDevices.Get (1));
 
   // Add internet stack to the terminals
   InternetStackHelper internet;
@@ -92,27 +127,30 @@ main (int argc, char *argv[])
   uint16_t port2 = 10;
   uint16_t port3 = 11;
 
+  
   OnOffHelper onoff ("ns3::UdpSocketFactory", 
-                     Address (InetSocketAddress (Ipv4Address ("10.1.1.4"), port1)));
+                     Address (InetSocketAddress (Ipv4Address ("10.1.1.2"), port1)));
   onoff.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
   onoff.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
   onoff.SetAttribute ("DataRate", DataRateValue (DataRate ("80KB/s")));
   ApplicationContainer app = onoff.Install (terminals.Get (0));
-  app.Start (Seconds (1.0));
-  app.Stop (Seconds (1.3));
+  app.Start (Seconds (1));
+  app.Stop (Seconds (1.2));
 
   OnOffHelper onoff1 ("ns3::UdpSocketFactory", 
-                     Address (InetSocketAddress (Ipv4Address ("10.1.1.4"), port2)));
+                     Address (InetSocketAddress (Ipv4Address ("10.1.1.2"), port2)));
   onoff1.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
   onoff1.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
   onoff1.SetAttribute ("DataRate", DataRateValue (DataRate ("80KB/s")));
   app = onoff1.Install (terminals.Get (0));
-  app.Start (Seconds (1.0));
-  app.Stop (Seconds (1.3));
+  app.Start (Seconds (1));
+  app.Stop (Seconds (1.2));
+
+  
 
   //Create this flow to avoid having ARP in the computation of end to end delay
   OnOffHelper onoff2 ("ns3::UdpSocketFactory", 
-                     Address (InetSocketAddress (Ipv4Address ("10.1.1.4"), port3)));
+                     Address (InetSocketAddress (Ipv4Address ("10.1.1.2"), port3)));
   onoff2.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
   onoff2.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
   onoff2.SetAttribute ("DataRate", DataRateValue (DataRate ("20KB/s")));
@@ -122,12 +160,12 @@ main (int argc, char *argv[])
   
   // Create two packet sink to measure end to end delay
   PacketSinkHelper sink ("ns3::UdpSocketFactory",
-                         Address (InetSocketAddress (Ipv4Address ("10.1.1.4"), port1)));
-  app = sink.Install (terminals.Get (3));
+                         Address (InetSocketAddress (Ipv4Address ("10.1.1.2"), port1)));
+  app = sink.Install (terminals.Get (1));
   app.Start (Seconds (0.0));
   PacketSinkHelper sink1 ("ns3::UdpSocketFactory",
-                         Address (InetSocketAddress (Ipv4Address ("10.1.1.4"), port2)));
-  app = sink1.Install (terminals.Get (3));
+                         Address (InetSocketAddress (Ipv4Address ("10.1.1.2"), port2)));
+  app = sink1.Install (terminals.Get (1));
   app.Start (Seconds (0.0));
 
   //
@@ -136,7 +174,7 @@ main (int argc, char *argv[])
   //
   AsciiTraceHelper ascii;
   //csma.EnableAsciiAll (ascii.CreateFileStream ("csma-ats.tr"));
-  csma.EnableAscii (ascii.CreateFileStream ("csma-ats-port.tr"), switchDevices.Get (3));
+  csma.EnableAscii (ascii.CreateFileStream ("csma-ats-port.tr"), switchDevices.Get (1));
   //
   // Also configure some tcpdump traces; each interface will be traced.
   // The output files will be named:
@@ -179,7 +217,7 @@ main (int argc, char *argv[])
                         "OutputBytes",
                         "Packet Byte Count",
                         GnuplotAggregator::KEY_BELOW);
-  tracePath = "/NodeList/4/DeviceList/3/TxQueue/Dequeue";
+  tracePath = "/NodeList/2/DeviceList/1/TxQueue/Dequeue";
   gnuHelper.ConfigurePlot ("ATSTxDequeue",
                             "Packet arrival time",
                             "Time (seconds)",
@@ -189,7 +227,7 @@ main (int argc, char *argv[])
                         "OutputBytes",
                         "Packet Byte Count",
                         GnuplotAggregator::KEY_BELOW);
-  tracePath = "/NodeList/3/DeviceList/0/MacRx";
+  tracePath = "/NodeList/1/DeviceList/0/MacRx";
   gnuHelper.ConfigurePlot ("ConsumerReceive",
                             "Packet arrival time",
                             "Time (seconds)",
@@ -200,7 +238,7 @@ main (int argc, char *argv[])
                         "Packet Byte Count",
                         GnuplotAggregator::KEY_BELOW);                      
   //Time plots
-  tracePath = "/NodeList/4/$ns3::TrafficControlLayer/RootQueueDiscList/*/DequeueTxTime";
+  tracePath = "/NodeList/2/$ns3::TrafficControlLayer/RootQueueDiscList/*/DequeueTxTime";
   probeType = "ns3::TimeProbe";
   gnuHelper.ConfigurePlot ("Dequeue-from-transmission-queue",
                             "Dequeue time",
@@ -213,7 +251,7 @@ main (int argc, char *argv[])
                       "Packet Time",
                       GnuplotAggregator::NO_KEY);
 
-  tracePath = "/NodeList/4/$ns3::TrafficControlLayer/RootQueueDiscList/*/QueueDiscClassList/0/QueueDisc/EligibilityTimeScheduler";
+  tracePath = "/NodeList/2/$ns3::TrafficControlLayer/RootQueueDiscList/*/QueueDiscClassList/0/QueueDisc/EligibilityTimeScheduler";
   gnuHelper.ConfigurePlot ("ElibilityTimeDequeue-0",
                             "Packet arrival time",
                             "Time (seconds)",
@@ -224,7 +262,7 @@ main (int argc, char *argv[])
                       "Output",
                       "Time",
                       GnuplotAggregator::KEY_BELOW);
-  tracePath = "/NodeList/4/$ns3::TrafficControlLayer/RootQueueDiscList/*/QueueDiscClassList/1/QueueDisc/EligibilityTimeScheduler";
+  tracePath = "/NodeList/2/$ns3::TrafficControlLayer/RootQueueDiscList/*/QueueDiscClassList/1/QueueDisc/EligibilityTimeScheduler";
   gnuHelper.ConfigurePlot ("ElibilityTimeDequeue-1",
                             "Packet arrival time",
                             "Time (seconds)",
@@ -235,7 +273,7 @@ main (int argc, char *argv[])
                       "Output",
                       "Time",
                       GnuplotAggregator::KEY_BELOW);
-  tracePath = "/NodeList/4/$ns3::TrafficControlLayer/RootQueueDiscList/*/QueueDiscClassList/0/QueueDisc/ArrivalTimeScheduler";
+  tracePath = "/NodeList/2/$ns3::TrafficControlLayer/RootQueueDiscList/*/QueueDiscClassList/0/QueueDisc/ArrivalTimeScheduler";
   gnuHelper.ConfigurePlot ("ArrivalTimeToScheduler-0",
                             "Packet arrival time",
                             "Time (seconds)",
@@ -246,7 +284,7 @@ main (int argc, char *argv[])
                       "Output",
                       "Time",
                       GnuplotAggregator::KEY_BELOW);
-  tracePath = "/NodeList/4/$ns3::TrafficControlLayer/RootQueueDiscList/*/QueueDiscClassList/1/QueueDisc/ArrivalTimeScheduler";
+  tracePath = "/NodeList/2/$ns3::TrafficControlLayer/RootQueueDiscList/*/QueueDiscClassList/1/QueueDisc/ArrivalTimeScheduler";
   gnuHelper.ConfigurePlot ("ArrivalTimeToScheduler-1",
                             "Packet arrival time",
                             "Time (seconds)",
@@ -289,7 +327,7 @@ main (int argc, char *argv[])
                       GnuplotAggregator::KEY_BELOW); 
 
   //FLOW 1 RX
-  tracePath = "/NodeList/3/ApplicationList/0/Rx";
+  tracePath = "/NodeList/1/ApplicationList/0/Rx";
   probeType = "ns3::PacketProbe";
   gnuHelper.ConfigurePlot ("FLOW1RX",
                             "Packet arrival time",
@@ -303,7 +341,7 @@ main (int argc, char *argv[])
                       GnuplotAggregator::KEY_BELOW); 
                     
   //FLOW 2 RX
-  tracePath = "/NodeList/3/ApplicationList/1/Rx";
+  tracePath = "/NodeList/1/ApplicationList/1/Rx";
   probeType = "ns3::PacketProbe";
   gnuHelper.ConfigurePlot ("FLOW2RX",
                             "Packet arrival time",
