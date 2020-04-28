@@ -44,7 +44,7 @@ main (int argc, char *argv[])
 
   clockImpl0 -> SetAttribute ("Frequency", DoubleValue (1));
   clockImpl1 -> SetAttribute ("Frequency", DoubleValue (1));
-  clockImpl2 -> SetAttribute ("Frequency", DoubleValue (1.1));
+  clockImpl2 -> SetAttribute ("Frequency", DoubleValue (1.5));
 
   
   Ptr<LocalClock> clock0 = CreateObject<LocalClock> ();
@@ -135,7 +135,7 @@ main (int argc, char *argv[])
   onoff.SetAttribute ("DataRate", DataRateValue (DataRate ("80KB/s")));
   ApplicationContainer app = onoff.Install (terminals.Get (0));
   app.Start (Seconds (1));
-  app.Stop (Seconds (1.2));
+  app.Stop (Seconds (1.3));
 
   OnOffHelper onoff1 ("ns3::UdpSocketFactory", 
                      Address (InetSocketAddress (Ipv4Address ("10.1.1.2"), port2)));
@@ -144,7 +144,7 @@ main (int argc, char *argv[])
   onoff1.SetAttribute ("DataRate", DataRateValue (DataRate ("80KB/s")));
   app = onoff1.Install (terminals.Get (0));
   app.Start (Seconds (1));
-  app.Stop (Seconds (1.2));
+  app.Stop (Seconds (1.3));
 
   
 
