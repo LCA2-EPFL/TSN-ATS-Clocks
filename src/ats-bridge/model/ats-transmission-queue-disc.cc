@@ -107,10 +107,7 @@ namespace ns3{
       }
       NS_LOG_DEBUG ("Packets inside the queue: " << GetInternalQueue (0)->GetNPackets ());
       m_state = TransmissionQueueState::STREAM_FILTERING;
-      //Simulator::ScheduleNow (&QueueDisc::Run, this);
-      Ptr<NetDeviceQueueInterface> inter = GetNetDeviceQueueInterface ();
-      Ptr<NetDeviceQueue> devQ = inter-> GetTxQueue (0);
-      devQ-> Wake ();
+      Simulator::ScheduleNow (&QueueDisc::Run, this);
     }
 
     return retval;
