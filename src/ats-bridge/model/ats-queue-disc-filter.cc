@@ -82,7 +82,10 @@ ATSQueueDiscFilter::DoClassify (Ptr<QueueDiscItem> item) const
       "Return value " << ret << "Protocol " << prot);
     }
   }
-  
+  if (udpHdr.GetDestinationPort () == 10)
+  {
+    ret = PacketFilter::PF_NO_MATCH;
+  }
   
   p->AddHeader (ipHeader);
   return ret;
