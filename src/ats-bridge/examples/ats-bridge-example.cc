@@ -44,7 +44,7 @@ main (int argc, char *argv[])
 
   clockImpl0 -> SetAttribute ("Frequency", DoubleValue (1));
   clockImpl1 -> SetAttribute ("Frequency", DoubleValue (1));
-  clockImpl2 -> SetAttribute ("Frequency", DoubleValue (1.5));
+  clockImpl2 -> SetAttribute ("Frequency", DoubleValue (1));
 
   
   Ptr<LocalClock> clock0 = CreateObject<LocalClock> ();
@@ -90,7 +90,7 @@ main (int argc, char *argv[])
   //Set ATSSchedulerQueueDisc parameters
   Ptr<ATSSchedulerGroup> group;
   group = CreateObject<ATSSchedulerGroup> ();
-  group->InsertNewGroup (Seconds (10), Seconds (0));
+  group->InsertNewGroup (Seconds (50), Seconds (0));
   Config::SetDefault ("ns3::ATSSchedulerQueueDisc::MaxSize", QueueSizeValue (QueueSize ("7000p")));
   Config::SetDefault ("ns3::ATSSchedulerQueueDisc::Group", PointerValue (group));
   Config::SetDefault ("ns3::ATSSchedulerQueueDisc::GroupID", UintegerValue (0));
@@ -103,8 +103,8 @@ main (int argc, char *argv[])
   uint16_t handle = tcATS.SetRootQueueDisc ("ns3::ATSTransmissionQueueDisc");
   tcATS.AddPacketFilter (handle, "ns3::ATSQueueDiscFilter");
   TrafficControlHelper::ClassIdList cid = tcATS.AddQueueDiscClasses (handle, 3, "ns3::QueueDiscClass");
-  tcATS.AddChildQueueDisc (handle, cid[0], "ns3::ATSSchedulerQueueDisc", "Rate", DataRateValue (DataRate ("84.7KB/s")));
-  tcATS.AddChildQueueDisc (handle, cid[1], "ns3::ATSSchedulerQueueDisc", "Rate", DataRateValue (DataRate ("84.7KB/s")));
+  tcATS.AddChildQueueDisc (handle, cid[0], "ns3::ATSSchedulerQueueDisc", "Rate", DataRateValue (DataRate ("84.375KB/s")));
+  tcATS.AddChildQueueDisc (handle, cid[1], "ns3::ATSSchedulerQueueDisc", "Rate", DataRateValue (DataRate ("84.375KB/s")));
   tcATS.AddChildQueueDisc (handle, cid[2], "ns3::ATSSchedulerQueueDisc");
   tcATS.Install (switchDevices.Get (1));
 
@@ -113,7 +113,6 @@ main (int argc, char *argv[])
   internet.Install (terminals);
 
   // We've got the "hardware" in place.  Now we need to add IP addresses.
-  //
   NS_LOG_INFO ("Assign IP Addresses.");
   Ipv4AddressHelper ipv4;
   ipv4.SetBase ("10.1.1.0", "255.255.255.0");
