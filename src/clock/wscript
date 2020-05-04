@@ -14,12 +14,14 @@ def build(bld):
         'model/local-clock.cc',
         'model/localtime-simulator-impl.cc',
         'model/perfect-clock-model-impl.cc',
+        'model/adversarial-clock.cc',
         'helper/clock-helper.cc',
         ]
 
     module_test = bld.create_ns3_module_test_library('clock',)
     module_test.source = [
         'test/node-schedule-test.cc',
+        'test/adversarial-clock-test.cc'
         ]
 
     headers = bld(features='ns3header')
@@ -30,6 +32,7 @@ def build(bld):
         'model/local-clock.h',
         'model/localtime-simulator-impl.h',
         'model/perfect-clock-model-impl.h',
+        'model/adversarial-clock.h',
         'helper/clock-helper.h',
         ]
 
