@@ -52,13 +52,17 @@ AdversarialClock::GetTypeId (void)
                   MakeTimeAccessor (&AdversarialClock::m_rho),
                   MakeTimeChecker ())        
     .AddAttribute ("Slope", "",
-                  TimeValue(MicroSeconds(1)),
-                  MakeTimeAccessor (&AdversarialClock::m_slope),
-                  MakeTimeChecker ())
+                  DoubleValue (1.5),
+                  MakeDoubleAccessor (&AdversarialClock::m_slope),
+                  MakeDoubleChecker <double> ())
     .AddAttribute ("Interval", "",
                   TimeValue(MicroSeconds(1)),
                   MakeTimeAccessor (&AdversarialClock::m_interval),
-                  MakeTimeChecker ())                
+                  MakeTimeChecker ())
+    .AddAttribute ("xvalue", "",
+                  TimeValue(MicroSeconds(1)),
+                  MakeTimeAccessor (&AdversarialClock::m_xj),
+                  MakeTimeChecker ())                            
   ;
   return tid;
 }
@@ -91,12 +95,20 @@ AdversarialClock::LocalToGlobalTime (Time localtime)
 {
   NS_LOG_FUNCTION (this << localtime);
 
-  if (localtime >   m_xj + Time (localtime.GetDouble % m_period.GetDouble))
-  {
-    localtime = localtime -  m_period;
-  }
-  return CalculateRelativeTime (localtime);
+  uint64_t cycles =  localtime.GetInteger () / m_period.GetInteger ();
+
+  NS_LOG_DEBUG ("Number of cycles: " << cycles);
   
+  if (localtime >  m_xj + cycles)
+  {
+    localtime = localtime -  cycles * m_period;
+    NS_LOG_DEBUG ("Adjust localtime: " << localtime);
+  }
+  Time ret;
+  ret = CalculateRelativeTimeLocalToGlobal (localtime);
+  ret += cycles*m_period; 
+  NS_LOG_DEBUG ("Time + cycles " << ret);
+  return  ret;
 }
 
 Time
@@ -110,31 +122,102 @@ Time
 AdversarialClock::LocalToGlobalAbs (Time localdelay)
 {
   NS_LOG_FUNCTION (this << localdelay);
-  
-  return LocalToGlobalTime (Simulator::Now () + localdelay);
+  Time ret = LocalToGlobalTime (Simulator::Now () + localdelay);
+  ret -=Simulator::Now (); 
+  NS_LOG_DEBUG ("Returned timed to simulator " << ret);
+  return ret;
 }
 
 Time
-AdversarialClock::CalculateRelativeTime (Time time)
+AdversarialClock::CalculateRelativeTimeGlobalToLocal (Time time)
 {
   NS_LOG_FUNCTION (this << time);
+
   Time ret;
-  if (time <=  m_xj)
+  if ((time <  m_xj) || (time == m_xj))
   {
-    ret = time - (m_delta/2);
+    //To do
+    if (time == 0)
+    {
+      ret = time;
+    }
+    else
+    {
+      ret = time - (m_delta/2);
+      NS_LOG_DEBUG ("Time 1: " << ret);
+    }
   }
-  if (m_xj < time <= m_xj + m_interval/m_slope)
+
+  if (((m_xj < time) && (time < m_xj + m_interval/m_slope)) || (time == m_xj + m_interval/m_slope))
   {
-    ret = m_slope.GetDouble * (time - m_xj) + m_xj - m_delta/2; 
+    NS_LOG_DEBUG ("Time : " <<  Time (m_slope * (time - m_xj).GetDouble ()));
+    ret = Time (m_slope * (time - m_xj).GetDouble ()) + m_xj - m_delta / 2; 
+    NS_LOG_DEBUG ("Time 2: " << ret);
   }
-  if (m_xj + m_interval/m_slope < time <= m_xj + m_interval/m_slope + m_interval)
+
+  if (((m_xj + m_interval/m_slope < time) && (time < m_xj + m_interval/m_slope + m_interval)) || 
+  (time == m_xj + m_interval/m_slope + m_interval))
   {
-    ret = (1/m_slope).GetDouble * (time - m_xj + m_interval/m_slope + m_interval + m_xj - m_delta/2);
+    //TODO doens't work
+    NS_LOG_DEBUG ("result no time: " <<  (m_interval.GetDouble ())/m_slope);
+    ret = Time ((1 / m_slope) * (time - m_xj + m_interval.GetDouble () / m_slope) + m_interval + m_xj - m_delta/2);
+    NS_LOG_DEBUG ("Time 3: " << ret);
   }
-  if (m_xj + m_interval/m_slope + m_interval < time <= m_xj + m_period)
+
+  if (((m_xj + m_interval/m_slope + m_interval < time) && (time < m_xj + m_period)) || 
+  (time ==m_xj + m_period))
   {
     ret = time - m_delta/2;
+    NS_LOG_DEBUG ("Time 4: " << ret);
   }
+
+  return ret;
+}
+
+Time
+AdversarialClock::CalculateRelativeTimeLocalToGlobal (Time time)
+{
+  NS_LOG_FUNCTION (this << time);
+
+  Time ret;
+  if ((time <  m_xj) || (time == m_xj))
+  {
+    //To do
+    ret = time + (m_delta/2);
+    NS_LOG_DEBUG ("Time 1: " << ret);
+  }
+
+  if (((m_xj < time) && (time < m_xj + m_interval/m_slope)) || (time == m_xj + m_interval))
+  {
+    NS_LOG_DEBUG ("Rest " << (time - m_xj).GetDouble ());
+    NS_LOG_DEBUG ("Rest time " << time - m_xj);
+    NS_LOG_DEBUG ("Multi: " << Time ((1 / m_slope) * (time - m_xj).GetDouble ()));
+    NS_LOG_DEBUG ("m_j value " << m_xj);
+    NS_LOG_DEBUG ("Sum " << Time ((1 / m_slope) * (time - m_xj).GetDouble ()) + m_xj);
+    ret = Time ((1 / m_slope) * (time - m_xj).GetDouble ()) + m_xj + m_delta / 2; 
+    NS_LOG_DEBUG ("Time 2: " << ret);
+  }
+
+  if (((m_xj + m_interval < time) && (time < m_xj + m_interval/m_slope + m_interval)) || 
+  (time == m_xj + m_interval/m_slope + m_interval))
+  {
+    NS_LOG_DEBUG ("div no time: " <<  (m_interval.GetDouble ())/m_slope);
+    NS_LOG_DEBUG ("div time " << Time ((m_interval.GetDouble ())/m_slope));
+    NS_LOG_DEBUG ("res no time" << time.GetDouble () - m_xj.GetDouble () - m_interval.GetDouble () / m_slope);
+    NS_LOG_DEBUG ("res  time" <<  Time (time.GetDouble () - m_xj.GetDouble () - m_interval.GetDouble () / m_slope));
+
+    ret = Time ( m_slope * (time.GetDouble () - m_xj.GetDouble () - m_interval.GetDouble () / m_slope) + m_interval + m_xj + m_delta/2);
+    NS_LOG_DEBUG ("Time 3: " << ret);
+  }
+
+  if (((m_xj + m_interval/m_slope + m_interval < time) && (time < m_xj + m_period)) || 
+  (time == m_xj + m_period))
+  {
+    ret = time + m_delta/2;
+    NS_LOG_DEBUG ("Time 4: " << ret);
+  }
+
+  return ret;  
 }
 
 }

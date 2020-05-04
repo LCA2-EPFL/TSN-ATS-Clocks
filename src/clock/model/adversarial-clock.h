@@ -51,10 +51,12 @@ private:
   Time m_period;
   Time m_interval;
   Time m_rho;
-  Time m_slope;
+  double m_slope;
   Time m_epsiddon;
   Time m_xj;
-  Time CalculateRelativeTime (Time time);
+  Time CalculateRelativeTimeGlobalToLocal (Time time);
+  Time CalculateRelativeTimeLocalToGlobal (Time time);
+
 };
 
 }//namespace ns3
