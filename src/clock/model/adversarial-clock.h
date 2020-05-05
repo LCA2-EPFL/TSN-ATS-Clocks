@@ -54,6 +54,7 @@ private:
   double m_slope;
   Time m_epsiddon;
   Time m_xj;
+  Time m_xjglobal;
   Time CalculateRelativeTimeGlobalToLocal (Time time);
   Time CalculateRelativeTimeLocalToGlobal (Time time);
 
