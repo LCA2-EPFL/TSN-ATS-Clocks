@@ -129,6 +129,7 @@ AdversarialClockTest::DoSetup ()
   GlobalValue::Bind ("SimulatorImplementationType", 
                      StringValue ("ns3::LocalTimeSimulatorImpl"));
 
+  Time::SetResolution (Time::FS);
   Time delta = MicroSeconds (1);
   Time period = MilliSeconds (30);
   double slope = 1.001;
@@ -146,10 +147,9 @@ AdversarialClockTest::DoSetup ()
   Simulator::ScheduleWithContext (id, MilliSeconds (1), &AdversarialClockTest::EventA, this);
 
   Simulator::Schedule (period, &AdversarialClockTest::ScheduleSend, this, period);
-  Simulator::Schedule (period + xvalue, &AdversarialClockTest::ScheduleSend, this, period);
-  Simulator::Schedule (period + xvalue + interval, &AdversarialClockTest::ScheduleSend, this, period);
-  Simulator::Schedule (period + xvalue + interval +  (interval/slope), &AdversarialClockTest::ScheduleSend, this, period);
-
+  Simulator::Schedule (period + xvalue + delta/2, &AdversarialClockTest::ScheduleSend, this, period);
+  Simulator::Schedule (period + xvalue + delta/2 + Time (interval.GetDouble () / slope), &AdversarialClockTest::ScheduleSend, this, period);
+  Simulator::Schedule (period + xvalue + delta/2 + interval + Time (interval.GetDouble () / slope), &AdversarialClockTest::ScheduleSend, this, period);
 }
 
 void
