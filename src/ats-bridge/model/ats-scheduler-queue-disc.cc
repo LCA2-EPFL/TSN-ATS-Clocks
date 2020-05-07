@@ -364,7 +364,7 @@ void
 ATSSchedulerQueueDisc::InitializeParams ()
 {
   NS_LOG_FUNCTION (this);
-  m_bucketEmptyTime = Simulator::Now ();
+  m_bucketEmptyTime = Seconds (-10);
 }
 
 void
