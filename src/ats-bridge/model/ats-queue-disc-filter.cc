@@ -22,21 +22,20 @@ ATSQueueDiscFilter::ATSQueueDiscFilter ()
 {
   NS_LOG_FUNCTION (this);
   m_streamFilter[0].src = Ipv4Address ("10.1.1.1");
-  m_streamFilter[0].dst = Ipv4Address ("10.1.1.2");
+  m_streamFilter[0].dst = Ipv4Address ("10.1.1.4");
   m_streamFilter[0].macSrc = Mac48Address ("00:00:00:00:00:01");
   m_streamFilter[0].macDst = Mac48Address ("00:00:00:00:00:07");
   m_streamFilter[0].dstport = 9;
-  m_streamFilter[1].src = Ipv4Address ("10.1.1.1");
-  m_streamFilter[1].dst = Ipv4Address ("10.1.1.2");
-  m_streamFilter[1].macSrc = Mac48Address ("00:00:00:00:00:01");
+  m_streamFilter[1].src = Ipv4Address ("10.1.1.2");
+  m_streamFilter[1].dst = Ipv4Address ("10.1.1.4");
+  m_streamFilter[1].macSrc = Mac48Address ("00:00:00:00:00:03");
   m_streamFilter[1].macDst = Mac48Address ("00:00:00:00:00:07");
   m_streamFilter[1].dstport = 10;
-  m_streamFilter[2].src = Ipv4Address ("10.1.1.1");
-  m_streamFilter[2].dst = Ipv4Address ("10.1.1.2");
+  m_streamFilter[2].src = Ipv4Address ("10.1.1.3");
+  m_streamFilter[2].dst = Ipv4Address ("10.1.1.4");
   m_streamFilter[2].macSrc = Mac48Address ("00:00:00:00:00:01");
   m_streamFilter[2].macDst = Mac48Address ("00:00:00:00:00:07");
   m_streamFilter[2].dstport = 11;
-  
 }
 ATSQueueDiscFilter::~ATSQueueDiscFilter ()
 {
@@ -81,10 +80,6 @@ ATSQueueDiscFilter::DoClassify (Ptr<QueueDiscItem> item) const
       << pair.second.src << "and port: " << pair.second.dstport << 
       "Return value " << ret << "Protocol " << prot);
     }
-  }
-  if (udpHdr.GetDestinationPort () == 10)
-  {
-    ret = PacketFilter::PF_NO_MATCH;
   }
   
   p->AddHeader (ipHeader);
