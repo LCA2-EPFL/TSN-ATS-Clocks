@@ -53,7 +53,7 @@ private:
   Time m_rho;
   double m_slope;
   Time m_epsiddon;
-  Time m_xj;
+  Time m_xjlocal;
   Time m_xjglobal;
   Time CalculateRelativeTimeGlobalToLocal (Time time);
   Time CalculateRelativeTimeLocalToGlobal (Time time);
