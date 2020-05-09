@@ -5,6 +5,7 @@
 
 #include "ns3/packet.h"
 #include "ns3/queue-item.h"
+#include "ns3/ipv4-header.h"
 
 
 
@@ -17,6 +18,12 @@ namespace ns3 {
     ~MacQueueDiscItem ();
     virtual void AddHeader (void);
     virtual bool Mark(void);
+    Mac48Address GetSource ();
+    void SetSource (Mac48Address);
+
+    private:
+    Mac48Address m_source;
+    Ipv4Header m_header;
  
   };        
 }
