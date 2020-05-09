@@ -248,8 +248,10 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   NS_LOG_DEBUG ("MaxResidenceTime " << maxResidenceTime);
   NS_LOG_DEBUG ("Arrival Time + MaxResidenceTime " <<  (arrivalTime.GetNanoSeconds () +  (maxResidenceTime.GetNanoSeconds ())));
   
+  //TODO
+  // ADD max residence time. Problems with resolution when execute PS
   
-  if (eligibilityTime <= arrivalTime.GetNanoSeconds () +  (maxResidenceTime.GetNanoSeconds ()))
+  if (eligibilityTime < arrivalTime + Seconds (1) || eligibilityTime == arrivalTime +  Seconds (1))
   {
     
     //The frame is valid
