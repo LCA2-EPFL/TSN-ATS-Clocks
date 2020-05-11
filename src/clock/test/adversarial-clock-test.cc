@@ -129,7 +129,7 @@ AdversarialClockTest::DoSetup ()
   GlobalValue::Bind ("SimulatorImplementationType", 
                      StringValue ("ns3::LocalTimeSimulatorImpl"));
 
-  Time::SetResolution (Time::FS);
+  Time::SetResolution (Time::NS);
   Time delta = MicroSeconds (1);
   Time period = MilliSeconds (30);
   double slope = 1.001;

@@ -248,11 +248,12 @@ void AdversarialGeneration::ScheduleStartEvent ()
   if (m_stop == false)
   {
     //Do this to make it easier to know times. m_init is global time
-    Ptr<Node> node = GetNode ();
-    Time initLocalTime = node->GetObject<LocalClock> ()->GlobalToLocalAbs (m_initTime);
+    //Ptr<Node> node = GetNode ();
+    //Time initLocalTime = node->GetObject<LocalClock> ()->GlobalToLocalAbs (m_initTime);
 
-    NS_LOG_DEBUG ("Init time local : " << initLocalTime << "Init time global : " << m_initTime);
-    Simulator::Schedule (initLocalTime, &AdversarialGeneration::ScheduleBurst, this);
+    //NS_LOG_DEBUG ("Init time local : " << initLocalTime << "Init time global : " << m_initTime);
+    //Simulator::Schedule (initLocalTime, &AdversarialGeneration::ScheduleBurst, this);
+    ScheduleBurst (); 
   }
 }
 

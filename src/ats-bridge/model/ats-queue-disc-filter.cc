@@ -1,6 +1,7 @@
 #include "ats-queue-disc-filter.h"
 #include "ns3/log.h"
 #include "ns3/udp-header.h"
+#include "mac-queue-disc-item.h"
 
 namespace ns3{
 
@@ -33,7 +34,7 @@ ATSQueueDiscFilter::ATSQueueDiscFilter ()
   m_streamFilter[1].dstport = 10;
   m_streamFilter[2].src = Ipv4Address ("10.1.1.3");
   m_streamFilter[2].dst = Ipv4Address ("10.1.1.4");
-  m_streamFilter[2].macSrc = Mac48Address ("00:00:00:00:00:01");
+  m_streamFilter[2].macSrc = Mac48Address ("00:00:00:00:00:05");
   m_streamFilter[2].macDst = Mac48Address ("00:00:00:00:00:07");
   m_streamFilter[2].dstport = 11;
 }
@@ -46,43 +47,28 @@ ATSQueueDiscFilter::DoClassify (Ptr<QueueDiscItem> item) const
 {
   NS_LOG_DEBUG (this << item);
   
-  Ptr<Packet> p = item->GetPacket ();
-  
+  Ptr<MacQueueDiscItem> itemmac = DynamicCast <MacQueueDiscItem> (item);
   Ipv4Header ipHeader;
-
-  p->RemoveHeader (ipHeader);
-  Ptr<Packet> pkt = p->Copy ();
-  UdpHeader udpHdr;
-  p->PeekHeader (udpHdr);
-  
-  NS_LOG_DEBUG ("PORT ----- " << udpHdr.GetDestinationPort ());
-
-  
- 
-  NS_LOG_DEBUG ("Packet Size " <<  ipHeader.GetPayloadSize () << "Packet Size " << p->GetSize () 
-  << "Get protocol" << item->GetProtocol ());
-
+  Ptr<Packet> p = item->GetPacket ();
+  p->PeekHeader (ipHeader);
   int32_t ret = -1;
-  Ipv4Address src = ipHeader.GetSource ();
-  Ipv4Address dest = ipHeader.GetDestination ();
-  uint8_t prot = ipHeader.GetProtocol ();
-  
-  NS_LOG_DEBUG ("dst :" << dest << "src :" << src << " " << item->GetAddress () << "protocol: " << prot);
+  Mac48Address srcmac = itemmac-> GetSource ();
+  NS_LOG_DEBUG ( "src :" << srcmac );
   
   
   for (auto const& pair : m_streamFilter)
   {
-    if (pair.second.dst == dest && pair.second.src == src && pair.second.dstport == udpHdr.GetDestinationPort ())
+    if (pair.second.macSrc == srcmac )
     {
       ret = pair.first;
       
-      NS_LOG_DEBUG ("Filter Coincidence " << pair.second.dst << "and " 
-      << pair.second.src << "and port: " << pair.second.dstport << 
-      "Return value " << ret << "Protocol " << prot);
+      NS_LOG_DEBUG ("Filter Coincidence " << pair.second.dst << " and " 
+      << pair.second.src << " and port: " << pair.second.dstport << 
+      " Return value " << ret);
     }
+    
   }
   
-  p->AddHeader (ipHeader);
   return ret;
 }
 bool 
