@@ -90,8 +90,10 @@ Time
 AdversarialClock::GlobalToLocalTime (Time globalTime)
 {
   NS_LOG_FUNCTION (this << globalTime);
-  
-  uint64_t cycles =  globalTime.GetInteger () / m_period.GetInteger ();
+
+  NS_LOG_DEBUG ("Global Time - xjGlobal : " << globalTime);
+
+  uint64_t cycles =  (globalTime - m_xjglobal).GetInteger () / (m_period).GetInteger ();
 
   NS_LOG_DEBUG ("Number of cycles global time: " << cycles);
   
@@ -100,10 +102,12 @@ AdversarialClock::GlobalToLocalTime (Time globalTime)
     globalTime = globalTime -  cycles * m_period;
     NS_LOG_DEBUG ("Adjust globaltime: " << globalTime);
   }
+
   Time ret;
   ret = CalculateRelativeTimeGlobalToLocal (globalTime);
   ret += cycles * m_period; 
   NS_LOG_DEBUG ("Time + cycles = LocalTime " << ret);
+
   return  ret;
 }
 
@@ -111,10 +115,13 @@ Time
 AdversarialClock::LocalToGlobalTime (Time localtime)
 {
   NS_LOG_FUNCTION (this << localtime);
-  m_xjlocal = GlobalToLocalTime (m_xjglobal);
-  NS_LOG_DEBUG ("Xj Local value : " << m_xjlocal);
-  uint64_t cycles =  localtime.GetInteger () / m_period.GetInteger ();
 
+  m_xjlocal = GlobalToLocalTime (m_xjglobal);
+
+  NS_LOG_DEBUG ("Local Time - xjLocal : " << localtime);
+
+  uint64_t cycles =  (localtime - m_xjlocal).GetInteger () / (m_period).GetInteger ();
+  NS_LOG_DEBUG ("local int; " << localtime.GetInteger () << "period int" << (m_period).GetInteger ());
   NS_LOG_DEBUG ("Number of cycles: " << cycles);
   
   if (localtime >  m_xjlocal + cycles)
@@ -133,9 +140,13 @@ Time
 AdversarialClock::GlobalToLocalAbs (Time globaldDelay)
 {
   NS_LOG_FUNCTION (this << globaldDelay);
+
   Time ret = GlobalToLocalTime (Simulator::Now () + globaldDelay);
   Time localtime = GlobalToLocalTime (Simulator::Now ());
   ret -=localtime;
+
+  NS_LOG_DEBUG ("Local Absolute time: " << ret);
+
   return ret;
 }
 
@@ -146,7 +157,9 @@ AdversarialClock::LocalToGlobalAbs (Time localdelay)
   Time localTime = GlobalToLocalTime (Simulator::Now ());
   Time ret = LocalToGlobalTime (localTime + localdelay);
   ret -=Simulator::Now (); 
+
   NS_LOG_DEBUG ("Returned timed to simulator " << ret); 
+
   return ret;
 }
 
@@ -164,8 +177,6 @@ AdversarialClock::CalculateRelativeTimeGlobalToLocal (Time time)
 
   if (((m_xjglobal < time) && (time < m_xjglobal + Time ( m_interval.GetDouble ()/m_slope))) || (time == m_xjglobal + Time ( m_interval.GetDouble ()/m_slope)))
   {
-    NS_LOG_DEBUG ("mxjglobal " << m_xjglobal);
-    NS_LOG_DEBUG ("Div: " << Time ( m_interval.GetDouble ()/m_slope));
     ret = Time (m_slope * (time - m_xjglobal).GetDouble ()) + m_xjglobal - m_delta / 2; 
     NS_LOG_DEBUG ("Time 2: " << ret);
   }
@@ -173,8 +184,6 @@ AdversarialClock::CalculateRelativeTimeGlobalToLocal (Time time)
   if (((m_xjglobal + Time ( m_interval.GetDouble ()/m_slope) < time) && (time < m_xjglobal + Time ( m_interval.GetDouble ()/m_slope) + m_interval)) || 
   (time == m_xjglobal + Time ( m_interval.GetDouble ()/m_slope) + m_interval))
   {
-    //TODO doens't work
-    NS_LOG_DEBUG ("result no time: " <<  (m_interval.GetDouble ())/m_slope);
     ret = Time ((1 / m_slope) * (time - m_xjglobal - m_interval.GetDouble () / m_slope) + m_interval + m_xjglobal - m_delta/2);
     NS_LOG_DEBUG ("Time 3: " << ret);
   }
@@ -192,9 +201,6 @@ AdversarialClock::CalculateRelativeTimeGlobalToLocal (Time time)
 Time
 AdversarialClock::CalculateRelativeTimeLocalToGlobal (Time time)
 {
-  NS_LOG_FUNCTION (this << time);
-  NS_LOG_DEBUG ("m_j value " << m_xjlocal);
-  NS_LOG_DEBUG ("suma " << m_xjlocal + Time ( m_interval.GetDouble ()/m_slope));
 
   Time ret;
   if ((time <  m_xjlocal) || (time == m_xjlocal))
@@ -222,7 +228,6 @@ AdversarialClock::CalculateRelativeTimeLocalToGlobal (Time time)
     ret = time + m_delta/2;
     NS_LOG_DEBUG ("Time 4: " << ret);
   }
-
   return ret;  
 }
 
