@@ -228,8 +228,8 @@ FileAggregator::Write2d (std::string context,
         {
           // Initially, have the C-style string in the buffer, which
           // is terminated by a null character, be of length zero.
-          char buffer[500];
-          int maxBufferSize = 500;
+          char buffer[1000];
+          int maxBufferSize = 1000;
           buffer[0] = 0;
 
           // Format the values.
