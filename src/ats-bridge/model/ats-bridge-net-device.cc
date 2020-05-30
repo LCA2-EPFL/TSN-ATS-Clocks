@@ -41,7 +41,7 @@ uint16_t protocol, Mac48Address src, Mac48Address dst)
   Ptr<Node> node = GetNode ();
   Ptr<TrafficControlLayer> tc =  node->GetObject <TrafficControlLayer> ();
   Ptr<MacQueueDiscItem> item = Create<MacQueueDiscItem> (packet->Copy (), Address (dst), protocol);
-
+  item->SetSource (src);
   NS_LOG_DEBUG ("LearningBridgeForward (incomingPort=" << incomingPort->GetInstanceTypeId ().GetName ()
                                                        << ", packet=" << packet << ", protocol="<<protocol
                                                        << ", src=" << src << ", dst=" << dst << ")");
@@ -100,7 +100,7 @@ ATSBridgeNetDevice::ForwardBroadcast (Ptr<NetDevice> incomingPort, Ptr<const Pac
   Ptr<Node> node = this->GetNode ();
   Ptr<TrafficControlLayer> tc = node->GetObject <TrafficControlLayer> ();
   Ptr<MacQueueDiscItem> item = Create<MacQueueDiscItem> (packet->Copy (), Address (dst), protocol);
-
+  item->SetSource (src);
   BridgeNetDevice::Learn (src, incomingPort);
 
   for (uint32_t i = 0; i < this->GetNBridgePorts (); i++)
