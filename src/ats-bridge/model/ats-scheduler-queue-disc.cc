@@ -248,9 +248,12 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   NS_LOG_DEBUG ("MaxResidenceTime " << maxResidenceTime);
   NS_LOG_DEBUG ("Arrival Time + MaxResidenceTime " <<  (arrivalTime.GetNanoSeconds () +  (maxResidenceTime.GetNanoSeconds ())));
   
+  //TODO
+  // ADD max residence time. Problems with resolution when execute PS
   
-  if (eligibilityTime <= arrivalTime.GetNanoSeconds () +  (maxResidenceTime.GetNanoSeconds ()))
+  if (eligibilityTime < arrivalTime + Seconds (1) || eligibilityTime == arrivalTime +  Seconds (1))
   {
+    
     //The frame is valid
     m_group->SetGroupElibilityTime (m_SchedulerGroupId,eligibilityTime);
     if (eligibilityTime < bucketFullTime)
@@ -263,8 +266,7 @@ ATSSchedulerQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       m_bucketEmptyTime = schedulerEligibilityTime + eligibilityTime - bucketFullTime;
       NS_LOG_DEBUG ("EligibilityTime > bucketFullTime -> BucketEmptyTime = " << m_bucketEmptyTime);
     } 
-    return AssingAndProceed (eligibilityTime, item);  
-    
+    return AssingAndProceed (eligibilityTime, item);
   }
   else 
   {
@@ -293,7 +295,8 @@ ATSSchedulerQueueDisc::AssingAndProceed (Time eligibilityTime, Ptr<QueueDiscItem
 
   //Schedule an event which will enqueue the item in the the transmission queue 
  
-  Simulator::Schedule (assignedEligibilityTime - Simulator::Now (), &ATSSchedulerQueueDisc::ReadyForTransmission, this);
+  EventId event = Simulator::Schedule (assignedEligibilityTime - Simulator::Now (), &ATSSchedulerQueueDisc::ReadyForTransmission, this);
+  eligibilityTime = Time (event.GetTs ());
   return retval;
 }
 
@@ -363,8 +366,7 @@ void
 ATSSchedulerQueueDisc::InitializeParams ()
 {
   NS_LOG_FUNCTION (this);
-  //TODO: maybe initialize params here before first packet enqueue (ie, bucketEmptytime...)
-  m_bucketEmptyTime = Simulator::Now ();
+  m_bucketEmptyTime = Seconds (-10);
 }
 
 void
